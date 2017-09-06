@@ -2,13 +2,17 @@ deinvert is a descrambler for voice inversion scrambling.
 
 ## Prerequisites
 deinvert requires [liquid-dsp](https://github.com/jgaeddert/liquid-dsp) and
-libsndfile. But it can be compiled without liquid-dsp using the configure
-option `--without-liquid`; filtering will be disabled.
+libsndfile.
+
+But it can be compiled without liquid-dsp using the configure
+option `--without-liquid`; filtering will be disabled. And it can be compiled
+without libsndfile using the configure option `--without-sndfile`; WAV
+support will be disabled.
 
 ## Compiling
 
     ./autogen.sh
-    ./configure
+    ./configure [--without-liquid] [--without-sndfile]
     make
 
 ## Usage

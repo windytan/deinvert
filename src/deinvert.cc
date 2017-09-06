@@ -113,8 +113,14 @@ Options GetOptions(int argc, char** argv) {
         options.nofilter = true;
         break;
       case 'o':
+#ifdef HAVE_SNDFILE
         options.output_type = deinvert::OUTPUT_WAVFILE;
         options.outfilename = std::string(optarg);
+#else
+        std::cerr << "error: deinvert was compiled without libsndfile"
+                  << std::endl;
+        options.just_exit = true;
+#endif
         break;
       case 'p':
         selectone_num = std::atoi(optarg);
@@ -244,6 +250,7 @@ bool RawPCMWriter::push(float sample) {
   return true;
 }
 
+#ifdef HAVE_SNDFILE
 SndfileWriter::SndfileWriter(const std::string& fname, int rate) :
     info_({0, rate, 1, SF_FORMAT_WAV | SF_FORMAT_PCM_16, 0, 0}),
     file_(sf_open(fname.c_str(), SFM_WRITE, &info_)),
@@ -270,6 +277,7 @@ bool SndfileWriter::write(sf_count_t numsamples) {
   return (file_ != nullptr &&
           sf_write_float(file_, buffer_, numsamples) == numsamples);
 }
+#endif
 
 }  // namespace deinvert
 
@@ -282,15 +290,19 @@ int main(int argc, char** argv) {
   deinvert::AudioReader* reader;
   deinvert::AudioWriter* writer;
 
+#ifdef HAVE_SNDFILE
   if (options.input_type == deinvert::INPUT_SNDFILE)
     reader = new deinvert::SndfileReader(options);
   else
+#endif
     reader = new deinvert::StdinReader(options);
 
+#ifdef HAVE_SNDFILE
   if (options.output_type == deinvert::OUTPUT_WAVFILE)
     writer = new deinvert::SndfileWriter(options.outfilename,
                                          options.samplerate);
   else
+#endif
     writer = new deinvert::RawPCMWriter();
 
   int filter_length = 2 * std::round(options.samplerate *

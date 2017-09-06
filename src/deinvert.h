@@ -114,6 +114,7 @@ class RawPCMWriter : public AudioWriter {
   size_t ptr_;
 };
 
+#ifdef HAVE_SNDFILE
 class SndfileWriter : public AudioWriter {
  public:
   SndfileWriter(const std::string& fname, int rate);
@@ -128,6 +129,7 @@ class SndfileWriter : public AudioWriter {
   float buffer_[bufsize_];
   size_t ptr_;
 };
+#endif
 
 }  // namespace deinvert
 #endif  // DEINVERT_H_
