@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "src/liquid_wrappers.h"
+#include "src/wdsp.h"
 
 namespace deinvert {
 
@@ -320,7 +321,7 @@ int main(int argc, char** argv) {
         writer->push(postfilter.execute().real() * 2.f);
       }
 #else
-      writer.push(nco.MixUp({insample, 0.0f}).real());
+      writer->push(nco.MixUp({insample, 0.0f}).real());
 #endif
     }
   }
