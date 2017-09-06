@@ -21,7 +21,7 @@ support will be disabled, only raw input/output will work.
 By default, deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and outputs in the
 same format via stdout. The inversion carrier defaults to 2632 Hz.
 
-    deinvert [OPTIONS]
+    ./src/deinvert [OPTIONS]
 
     -f, --frequency FREQ   Frequency of the inversion carrier, in Hertz.
 
