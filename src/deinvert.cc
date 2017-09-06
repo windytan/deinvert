@@ -195,11 +195,11 @@ SndfileReader::SndfileReader(const Options& options) :
     info_({0, 0, 0, 0, 0, 0}),
     file_(sf_open(options.infilename.c_str(), SFM_READ, &info_)) {
   is_eof_ = false;
-  if (info_.frames == 0) {
-    std::cerr << "error: couldn't open " << options.infilename << std::endl;
+  if (file_ == nullptr) {
+    std::cerr << options.infilename << ": " << sf_strerror(nullptr) <<
+                 std::endl;
     is_eof_ = true;
-  }
-  if (info_.samplerate < 6000.f) {
+  } else if (info_.samplerate < 6000.f) {
     std::cerr << "error: sample rate must be 6000 Hz or higher" << std::endl;
     is_eof_ = true;
   }
