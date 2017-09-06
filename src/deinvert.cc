@@ -214,9 +214,10 @@ std::vector<float> SndfileReader::ReadBlock() {
   if (is_eof_)
     return result;
 
-  sf_count_t num_read = sf_readf_float(file_, buffer_,
-      bufsize_ / info_.channels);
-  if (num_read != bufsize_)
+  int to_read = bufsize_ / info_.channels;
+
+  sf_count_t num_read = sf_readf_float(file_, buffer_, to_read);
+  if (num_read != to_read)
     is_eof_ = true;
 
   if (info_.channels == 1) {
@@ -256,6 +257,10 @@ SndfileWriter::SndfileWriter(const std::string& fname, int rate) :
     info_({0, rate, 1, SF_FORMAT_WAV | SF_FORMAT_PCM_16, 0, 0}),
     file_(sf_open(fname.c_str(), SFM_WRITE, &info_)),
     ptr_(0) {
+  if (file_ == nullptr) {
+    std::cerr << fname << ": " << sf_strerror(nullptr) <<
+                 std::endl;
+  }
 }
 
 SndfileWriter::~SndfileWriter() {
@@ -324,18 +329,22 @@ int main(int argc, char** argv) {
   while (!reader->eof()) {
     for (float insample : reader->ReadBlock()) {
       nco.Step();
+      bool is_still_open = true;
 #ifdef HAVE_LIQUID
       if (options.nofilter) {
-        writer->push(nco.MixUp({insample, 0.0f}).real() * M_SQRT2);
+        is_still_open =
+            writer->push(nco.MixUp({insample, 0.0f}).real() * M_SQRT2);
       } else {
         prefilter.push({insample, 0.0f});
         std::complex<float> mixed = nco.MixUp(prefilter.execute());
         postfilter.push(mixed.real());
-        writer->push(postfilter.execute().real() * 2.f);
+        is_still_open = writer->push(postfilter.execute().real() * 2.f);
       }
 #else
-      writer->push(nco.MixUp({insample, 0.0f}).real());
+      is_still_open = writer->push(nco.MixUp({insample, 0.0f}).real());
 #endif
+      if (!is_still_open)
+        continue;
     }
   }
 
