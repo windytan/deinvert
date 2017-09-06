@@ -214,7 +214,8 @@ std::vector<float> SndfileReader::ReadBlock() {
   if (is_eof_)
     return result;
 
-  sf_count_t num_read = sf_readf_float(file_, buffer_, bufsize_);
+  sf_count_t num_read = sf_readf_float(file_, buffer_,
+      bufsize_ / info_.channels);
   if (num_read != bufsize_)
     is_eof_ = true;
 
