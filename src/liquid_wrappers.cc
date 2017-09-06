@@ -26,26 +26,6 @@
 
 namespace liquid {
 
-AGC::AGC(float bw, float initial_gain) {
-  object_ = agc_crcf_create();
-  agc_crcf_set_bandwidth(object_, bw);
-  agc_crcf_set_gain(object_, initial_gain);
-}
-
-AGC::~AGC() {
-  agc_crcf_destroy(object_);
-}
-
-std::complex<float> AGC::execute(std::complex<float> s) {
-  std::complex<float> result;
-  agc_crcf_execute(object_, s, &result);
-  return result;
-}
-
-float AGC::gain() {
-  return agc_crcf_get_gain(object_);
-}
-
 FIRFilter::FIRFilter(int len, float fc, float As, float mu) {
   assert(fc >= 0.0f && fc <= 0.5f);
   assert(As > 0.0f);
@@ -109,52 +89,6 @@ void NCO::StepPLL(float dphi) {
 
 float NCO::frequency() {
   return nco_crcf_get_frequency(object_);
-}
-
-SymSync::SymSync(liquid_firfilt_type ftype, unsigned k, unsigned m,
-    float beta, unsigned num_filters) :
-  object_(symsync_crcf_create_rnyquist(ftype, k, m, beta, num_filters)) {
-}
-
-SymSync::~SymSync() {
-  symsync_crcf_destroy(object_);
-}
-
-void SymSync::set_bandwidth(float bw) {
-  symsync_crcf_set_lf_bw(object_, bw);
-}
-
-void SymSync::set_output_rate(unsigned r) {
-  symsync_crcf_set_output_rate(object_, r);
-}
-
-std::vector<std::complex<float>> SymSync::execute(std::complex<float>* in) {
-  std::complex<float> s_out[8];
-  unsigned n_out = 0;
-  symsync_crcf_execute(object_, in, 1, &s_out[0], &n_out);
-
-  std::vector<std::complex<float>> result(std::begin(s_out), std::end(s_out));
-  result.resize(n_out);
-  return result;
-}
-
-Modem::Modem(modulation_scheme scheme) : object_(modem_create(scheme)) {
-}
-
-Modem::~Modem() {
-  modem_destroy(object_);
-}
-
-unsigned int Modem::Demodulate(std::complex<float> sample) {
-  unsigned symbol_out;
-
-  modem_demodulate(object_, sample, &symbol_out);
-
-  return symbol_out;
-}
-
-float Modem::phase_error() {
-  return modem_get_demodulator_phase_error(object_);
 }
 
 Resampler::Resampler(float ratio, int length) :

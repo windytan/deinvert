@@ -27,17 +27,6 @@
 
 namespace liquid {
 
-class AGC {
- public:
-  AGC(float bw, float initial_gain);
-  ~AGC();
-  std::complex<float> execute(std::complex<float> s);
-  float gain();
-
- private:
-  agc_crcf object_;
-};
-
 class FIRFilter {
  public:
   FIRFilter(int len, float fc, float As = 60.0f, float mu = 0.0f);
@@ -66,30 +55,6 @@ class NCO {
   nco_crcf object_;
 };
 
-class SymSync {
- public:
-  SymSync(liquid_firfilt_type ftype, unsigned k, unsigned m,
-          float beta, unsigned num_filters);
-  ~SymSync();
-  void set_bandwidth(float);
-  void set_output_rate(unsigned);
-  std::vector<std::complex<float>> execute(std::complex<float>* in);
-
- private:
-  symsync_crcf object_;
-};
-
-class Modem {
- public:
-  explicit Modem(modulation_scheme scheme);
-  ~Modem();
-  unsigned int Demodulate(std::complex<float> sample);
-  float phase_error();
-
- private:
-  modem object_;
-};
-
 class Resampler {
  public:
   explicit Resampler(float ratio, int length);
@@ -104,6 +69,6 @@ class Resampler {
 
 }  // namespace liquid
 
-#endif // HAVE_LIQUID
+#endif  // HAVE_LIQUID
 
-#endif // LIQUID_WRAPPERS_H_
+#endif  // LIQUID_WRAPPERS_H_
