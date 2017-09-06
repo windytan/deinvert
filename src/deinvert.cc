@@ -329,21 +329,21 @@ int main(int argc, char** argv) {
   while (!reader->eof()) {
     for (float insample : reader->ReadBlock()) {
       nco.Step();
-      bool is_still_open = true;
+      bool can_still_write = true;
 #ifdef HAVE_LIQUID
       if (options.nofilter) {
-        is_still_open =
+        can_still_write =
             writer->push(nco.MixUp({insample, 0.0f}).real() * M_SQRT2);
       } else {
         prefilter.push({insample, 0.0f});
         std::complex<float> mixed = nco.MixUp(prefilter.execute());
         postfilter.push(mixed.real());
-        is_still_open = writer->push(postfilter.execute().real() * 2.f);
+        can_still_write = writer->push(postfilter.execute().real() * 2.f);
       }
 #else
-      is_still_open = writer->push(nco.MixUp({insample, 0.0f}).real());
+      can_still_write = writer->push(nco.MixUp({insample, 0.0f}).real());
 #endif
-      if (!is_still_open)
+      if (!can_still_write)
         continue;
     }
   }
