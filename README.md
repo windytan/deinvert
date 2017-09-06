@@ -13,7 +13,7 @@ option `--without-liquid`; filtering will be disabled.
 
 ## Usage
 
-By default, deinvert reads 16-bit, 44.1 kHz PCM via stdin and outputs in the
+By default, deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and outputs in the
 same format via stdout. The inversion carrier defaults to 2632 Hz.
 
     deinvert [OPTIONS]
@@ -34,7 +34,8 @@ same format via stdout. The inversion carrier defaults to 2632 Hz.
                            the set of common carrier frequencies used by
                            e.g. the Selectone ST-20B scrambler.
 
-    -r, --samplerate RATE  Sampling rate of raw input audio, in Hertz.
+    -r, --samplerate RATE  Sampling rate of raw input (and output) audio, in
+                           Hertz.
 
     -v, --version          Display version string.
 
