@@ -1,17 +1,20 @@
 deinvert is a descrambler for voice inversion scrambling.
 
-==Prerequisites==
-deinvert requires liquid-dsp and libsndfile. It can be compiled without
+## Prerequisites
+deinvert requires liquid-dsp and libsndfile. But it can be compiled without
 liquid-dsp using the configure option `--without-liquid`; filtering
 will be disabled.
 
-==Compiling==
+## Compiling
 
     ./autogen.sh
     ./configure
     make
 
-==Usage==
+## Usage
+
+By default, deinvert reads 16-bit, 44.1 kHz PCM via stdin and outputs in the
+same format via stdout. The inversion carrier defaults to 2632 Hz.
 
     deinvert [OPTIONS]
 
