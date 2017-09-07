@@ -18,8 +18,13 @@ support will be disabled, only raw input/output will work.
 
 ## Usage
 
-By default, deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and outputs in the
-same format via stdout. The inversion carrier defaults to 2632 Hz.
+Descrambling a WAV file scrambled with setting 4:
+
+    ./src/deinvert -i input.wav -o output.wav -p 4
+
+If no arguments are given deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and
+outputs in the same format via stdout. The inversion carrier defaults to 2632
+Hz.
 
     ./src/deinvert [OPTIONS]
 
