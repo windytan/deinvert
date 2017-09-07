@@ -111,7 +111,7 @@ class RawPCMWriter : public AudioWriter {
  private:
   static const int bufsize_ = 4096;
   int16_t buffer_[bufsize_];
-  size_t ptr_;
+  size_t buffer_pos_;
 };
 
 #ifdef HAVE_SNDFILE
@@ -127,7 +127,7 @@ class SndfileWriter : public AudioWriter {
   SF_INFO info_;
   SNDFILE* file_;
   float buffer_[bufsize_];
-  size_t ptr_;
+  size_t buffer_pos_;
 };
 #endif
 

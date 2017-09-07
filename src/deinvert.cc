@@ -238,16 +238,16 @@ float SndfileReader::samplerate() const {
 AudioWriter::~AudioWriter() {
 }
 
-RawPCMWriter::RawPCMWriter() : ptr_(0) {
+RawPCMWriter::RawPCMWriter() : buffer_pos_(0) {
 }
 
 bool RawPCMWriter::push(float sample) {
   int16_t outsample = sample * 32767.f;
-  buffer_[ptr_] = outsample;
-  ptr_++;
-  if (ptr_ == bufsize_) {
+  buffer_[buffer_pos_] = outsample;
+  buffer_pos_++;
+  if (buffer_pos_ == bufsize_) {
     fwrite(buffer_, sizeof(buffer_[0]), bufsize_, stdout);
-    ptr_ = 0;
+    buffer_pos_ = 0;
   }
   return true;
 }
@@ -256,7 +256,7 @@ bool RawPCMWriter::push(float sample) {
 SndfileWriter::SndfileWriter(const std::string& fname, int rate) :
     info_({0, rate, 1, SF_FORMAT_WAV | SF_FORMAT_PCM_16, 0, 0}),
     file_(sf_open(fname.c_str(), SFM_WRITE, &info_)),
-    ptr_(0) {
+    buffer_pos_(0) {
   if (file_ == nullptr) {
     std::cerr << fname << ": " << sf_strerror(nullptr) <<
                  std::endl;
@@ -264,18 +264,18 @@ SndfileWriter::SndfileWriter(const std::string& fname, int rate) :
 }
 
 SndfileWriter::~SndfileWriter() {
-  write(ptr_);
+  write(buffer_pos_);
   sf_close(file_);
 }
 
 bool SndfileWriter::push(float sample) {
   bool success = true;
-  buffer_[ptr_] = sample;
-  if (ptr_ == bufsize_ - 1) {
-    success = write(ptr_);
+  buffer_[buffer_pos_] = sample;
+  if (buffer_pos_ == bufsize_ - 1) {
+    success = write(buffer_pos_);
   }
 
-  ptr_ = (ptr_ + 1) % bufsize_;
+  buffer_pos_ = (buffer_pos_ + 1) % bufsize_;
   return success;
 }
 
@@ -316,32 +316,31 @@ int main(int argc, char** argv) {
   filter_length = std::min(deinvert::kMaxFilterLength, filter_length);
 
 #ifdef HAVE_LIQUID
-  liquid::NCO nco(LIQUID_VCO,
-                  options.frequency * 2.0f * M_PI / options.samplerate);
+  liquid::NCO oscillator(LIQUID_VCO,
+                         options.frequency * 2.0f * M_PI / options.samplerate);
   liquid::FIRFilter prefilter(filter_length,
                            options.frequency / options.samplerate);
   liquid::FIRFilter postfilter(filter_length,
                            (options.frequency - 150.f) / options.samplerate);
 #else
-  wdsp::NCO nco(options.frequency * 2.0f * M_PI / options.samplerate);
+  wdsp::NCO oscillator(options.frequency * 2.0f * M_PI / options.samplerate);
 #endif
 
   while (!reader->eof()) {
     for (float insample : reader->ReadBlock()) {
-      nco.Step();
+      oscillator.Step();
       bool can_still_write = true;
 #ifdef HAVE_LIQUID
       if (options.nofilter) {
         can_still_write =
-            writer->push(nco.MixUp({insample, 0.0f}).real() * M_SQRT2);
+            writer->push(oscillator.MixUp({insample, 0.0f}).real() * M_SQRT2);
       } else {
         prefilter.push({insample, 0.0f});
-        std::complex<float> mixed = nco.MixUp(prefilter.execute());
-        postfilter.push(mixed.real());
+        postfilter.push(oscillator.MixUp(prefilter.execute()).real());
         can_still_write = writer->push(postfilter.execute().real() * 2.f);
       }
 #else
-      can_still_write = writer->push(nco.MixUp({insample, 0.0f}).real());
+      can_still_write = writer->push(oscillator.MixUp({insample, 0.0f}).real());
 #endif
       if (!can_still_write)
         continue;
