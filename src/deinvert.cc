@@ -76,6 +76,7 @@ Options GetOptions(int argc, char** argv) {
     { "input-file",    1,           0, 'i'},
     { "help",          no_argument, 0, 'h'},
     { "nofilter",      no_argument, 0, 'n'},
+    { "output-file",   1,           0, 'o'},
     { "samplerate",    1,           0, 'r'},
     { "version",       no_argument, 0, 'v'},
     {0,                0,           0,  0}};
