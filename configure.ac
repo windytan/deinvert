@@ -18,7 +18,7 @@ AC_ARG_WITH([sndfile],
 
 LIQUID=
 AS_IF([test "x$with_liquid" != xno],
-  [AC_CHECK_LIB([liquid], [nco_crcf_mix_down],
+  [AC_CHECK_LIB([liquid], [nco_crcf_mix_up],
     [AC_SUBST([LIQUID], ["-lliquid"])
      AC_DEFINE([HAVE_LIQUID], [1],
                [Define if you have liquid])
