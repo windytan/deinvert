@@ -174,9 +174,9 @@ StdinReader::~StdinReader() {
 }
 
 std::vector<float> StdinReader::ReadBlock() {
-  int num_read = fread(buffer_, sizeof(buffer_[0]), bufsize_, stdin);
+  int num_read = fread(buffer_, sizeof(buffer_[0]), buffer_size_, stdin);
 
-  if (num_read < bufsize_)
+  if (num_read < buffer_size_)
     is_eof_ = true;
 
   std::vector<float> result(num_read);
@@ -214,7 +214,7 @@ std::vector<float> SndfileReader::ReadBlock() {
   if (is_eof_)
     return result;
 
-  int to_read = bufsize_ / info_.channels;
+  int to_read = buffer_size_ / info_.channels;
 
   sf_count_t num_read = sf_readf_float(file_, buffer_, to_read);
   if (num_read != to_read)
@@ -245,8 +245,8 @@ bool RawPCMWriter::push(float sample) {
   int16_t outsample = sample * 32767.f;
   buffer_[buffer_pos_] = outsample;
   buffer_pos_++;
-  if (buffer_pos_ == bufsize_) {
-    fwrite(buffer_, sizeof(buffer_[0]), bufsize_, stdout);
+  if (buffer_pos_ == buffer_size_) {
+    fwrite(buffer_, sizeof(buffer_[0]), buffer_size_, stdout);
     buffer_pos_ = 0;
   }
   return true;
@@ -271,11 +271,11 @@ SndfileWriter::~SndfileWriter() {
 bool SndfileWriter::push(float sample) {
   bool success = true;
   buffer_[buffer_pos_] = sample;
-  if (buffer_pos_ == bufsize_ - 1) {
+  if (buffer_pos_ == buffer_size_ - 1) {
     success = write(buffer_pos_);
   }
 
-  buffer_pos_ = (buffer_pos_ + 1) % bufsize_;
+  buffer_pos_ = (buffer_pos_ + 1) % buffer_size_;
   return success;
 }
 

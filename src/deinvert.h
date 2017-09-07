@@ -76,9 +76,9 @@ class StdinReader : public AudioReader {
   float samplerate() const override;
 
  private:
-  static const int bufsize_ = 4096;
+  static const int buffer_size_ = 4096;
   float samplerate_;
-  int16_t buffer_[bufsize_];
+  int16_t buffer_[buffer_size_];
 };
 
 #ifdef HAVE_SNDFILE
@@ -90,10 +90,10 @@ class SndfileReader : public AudioReader {
   float samplerate() const override;
 
  private:
-  static const int bufsize_ = 4096;
+  static const int buffer_size_ = 4096;
   SF_INFO info_;
   SNDFILE* file_;
-  float buffer_[bufsize_];
+  float buffer_[buffer_size_];
 };
 #endif
 
@@ -109,8 +109,8 @@ class RawPCMWriter : public AudioWriter {
   bool push(float sample) override;
 
  private:
-  static const int bufsize_ = 4096;
-  int16_t buffer_[bufsize_];
+  static const int buffer_size_ = 4096;
+  int16_t buffer_[buffer_size_];
   size_t buffer_pos_;
 };
 
@@ -122,11 +122,11 @@ class SndfileWriter : public AudioWriter {
   bool push(float sample) override;
 
  private:
-  static const int bufsize_ = 4096;
+  static const int buffer_size_ = 4096;
   bool write(sf_count_t numsamples);
   SF_INFO info_;
   SNDFILE* file_;
-  float buffer_[bufsize_];
+  float buffer_[buffer_size_];
   size_t buffer_pos_;
 };
 #endif
