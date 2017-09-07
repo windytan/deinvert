@@ -1,6 +1,5 @@
 #include "wdsp.h"
 
-#include <cassert>
 #include <complex>
 
 namespace wdsp {

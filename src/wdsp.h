@@ -1,10 +1,7 @@
 #ifndef WDSP_H_
 #define WDSP_H_
 
-#include <cassert>
-#include <vector>
 #include <complex>
-#include <iostream>
 
 namespace wdsp {
 

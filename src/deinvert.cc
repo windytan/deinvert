@@ -18,9 +18,7 @@
 #include "src/deinvert.h"
 
 #include <getopt.h>
-#include <algorithm>
 #include <iostream>
-#include <stdexcept>
 #include <string>
 
 #include "config.h"
@@ -313,7 +311,8 @@ int main(int argc, char** argv) {
 
   int filter_length = 2 * std::round(options.samplerate *
                                      deinvert::kLowpassFilterLengthSeconds) + 1;
-  filter_length = std::min(deinvert::kMaxFilterLength, filter_length);
+  filter_length = filter_length < deinvert::kMaxFilterLength ?
+                  filter_length : deinvert::kMaxFilterLength;
 
 #ifdef HAVE_LIQUID
   liquid::NCO oscillator(LIQUID_VCO,

@@ -21,7 +21,6 @@
 #ifdef HAVE_LIQUID
 
 #include <complex>
-#include <vector>
 
 #include "liquid/liquid.h"
 
