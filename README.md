@@ -39,8 +39,6 @@ Hz.
     -i, --input-file FILE  Use an audio file as input. All formats
                            supported by libsndfile should work.
 
-    -n, --nofilter         Disable filtering (faster).
-
     -o, --output-file FILE Write output to a WAV file instead of stdout. An
                            existing file will be overwritten.
 
@@ -48,8 +46,12 @@ Hz.
                            the set of common carrier frequencies used by
                            e.g. the Selectone ST-20B scrambler.
 
-    -r, --samplerate RATE  Sampling rate of raw input (and output) audio, in
-                           Hertz.
+    -q, --quality NUM      Filter quality, from 0 (worst and fastest) to
+                           3 (best and slowest). The default is 2.
+
+    -r, --samplerate RATE  Sampling rate of raw input audio, in Hertz.
+
+    -s, --split-frequency  Split point for split-band inversion, in Hertz.
 
     -v, --version          Display version string.
 

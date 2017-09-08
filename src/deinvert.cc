@@ -29,7 +29,6 @@ namespace deinvert {
 
 namespace {
 
-const float kLowpassFilterLengthSeconds = 0.0018f;
 const int   kMaxFilterLength            = 2047;
 
 }
@@ -45,14 +44,15 @@ void PrintUsage() {
      "-i, --input-file FILE  Use an audio file as input. All formats\n"
      "                       supported by libsndfile should work.\n"
      "\n"
-     "-n, --nofilter         Disable filtering (faster).\n"
-     "\n"
      "-o, --output-file FILE Write output to a WAV file instead of stdout. An\n"
      "                       existing file will be overwritten.\n"
      "\n"
      "-p, --preset NUM       Scrambler frequency preset (1-8), referring to\n"
      "                       the set of common carrier frequencies used by\n"
      "                       e.g. the Selectone ST-20B scrambler.\n"
+     "\n"
+     "-q, --quality NUM      Filter quality, from 0 (worst and fastest) to\n"
+     "                       3 (best and slowest). The default is 2.\n"
      "\n"
      "-r, --samplerate RATE  Sampling rate of raw input audio, in Hertz.\n"
      "\n"
@@ -113,7 +113,7 @@ Options GetOptions(int argc, char** argv) {
         options.frequency_hi = std::atoi(optarg);
         break;
       case 'n':
-        options.nofilter = true;
+        options.quality = 0;
         break;
       case 'o':
 #ifdef HAVE_SNDFILE
@@ -129,9 +129,17 @@ Options GetOptions(int argc, char** argv) {
         selectone_num = std::atoi(optarg);
         if (selectone_num >= 1 &&
             selectone_num <= 8) {
-          options.frequency = selectone_carriers.at(selectone_num - 1);
+          options.frequency_lo = selectone_carriers.at(selectone_num - 1);
         } else {
           std::cerr << "error: please specify scrambler group from 1 to 8"
+                    << std::endl;
+          options.just_exit = true;
+        }
+        break;
+      case 'q':
+        options.quality = std::atoi(optarg);
+        if (options.quality < 0 || options.quality > 3) {
+          std::cerr << "error: please specify filter quality from 0 to 3"
                     << std::endl;
           options.just_exit = true;
         }
