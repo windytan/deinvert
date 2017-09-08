@@ -56,6 +56,8 @@ void PrintUsage() {
      "\n"
      "-r, --samplerate RATE  Sampling rate of raw input audio, in Hertz.\n"
      "\n"
+     "-s, --split-frequency  Split point for split-band inversion, in Hertz.\n"
+     "\n"
      "-v, --version          Display version string.\n";
 }
 
@@ -71,27 +73,29 @@ Options GetOptions(int argc, char** argv) {
   deinvert::Options options;
 
   static struct option long_options[] = {
-    { "frequency",     no_argument, 0, 'f'},
-    { "preset",        1,           0, 'p'},
-    { "input-file",    1,           0, 'i'},
-    { "help",          no_argument, 0, 'h'},
-    { "nofilter",      no_argument, 0, 'n'},
-    { "output-file",   1,           0, 'o'},
-    { "samplerate",    1,           0, 'r'},
-    { "version",       no_argument, 0, 'v'},
-    {0,                0,           0,  0}};
+    { "frequency",       no_argument, 0, 'f'},
+    { "preset",          1,           0, 'p'},
+    { "input-file",      1,           0, 'i'},
+    { "help",            no_argument, 0, 'h'},
+    { "nofilter",        no_argument, 0, 'n'},
+    { "output-file",     1,           0, 'o'},
+    { "quality",         1,           0, 'q'},
+    { "samplerate",      1,           0, 'r'},
+    { "split-frequency", 1,           0, 's'},
+    { "version",         no_argument, 0, 'v'},
+    {0,                  0,           0,  0}};
 
   static const std::vector<float> selectone_carriers({
       2632.f, 2718.f, 2868.f, 3023.f, 3196.f, 3339.f, 3495.f, 3729.f
   });
 
-  options.frequency = selectone_carriers.at(0);
+  options.frequency_hi = selectone_carriers.at(0);
 
   int option_index = 0;
   int option_char;
   int selectone_num;
 
-  while ((option_char = getopt_long(argc, argv, "f:hi:no:p:r:v",
+  while ((option_char = getopt_long(argc, argv, "f:hi:no:p:q:r:s:v",
                                     long_options,
          &option_index)) >= 0) {
     switch (option_char) {
@@ -106,7 +110,7 @@ Options GetOptions(int argc, char** argv) {
 #endif
         break;
       case 'f':
-        options.frequency = std::atoi(optarg);
+        options.frequency_hi = std::atoi(optarg);
         break;
       case 'n':
         options.nofilter = true;
@@ -139,6 +143,10 @@ Options GetOptions(int argc, char** argv) {
                     << std::endl;
           options.just_exit = true;
         }
+        break;
+      case 's':
+        options.frequency_lo = std::atoi(optarg);
+        options.is_split_band = true;
         break;
       case 'v':
         PrintVersion();
@@ -285,6 +293,40 @@ bool SndfileWriter::write() {
 }
 #endif
 
+Inverter::Inverter(float freq_prefilter, float freq_shift,
+                   float freq_postfilter, float samplerate, int filter_length,
+                   bool do_filter) :
+#ifdef HAVE_LIQUID
+    prefilter_(filter_length, freq_prefilter / samplerate),
+    postfilter_(filter_length, freq_postfilter / samplerate),
+    oscillator_(LIQUID_VCO, freq_shift * 2.0f * M_PI / samplerate),
+    do_filter_(do_filter)
+#else
+    oscillator_(freq_shift * 2.0f * M_PI / samplerate);
+    do_filter_(false)
+#endif
+{}
+
+float Inverter::execute(float insample) {
+  oscillator_.Step();
+
+  float result;
+
+#ifdef HAVE_LIQUID
+  if (do_filter_) {
+    prefilter_.push({insample, 0.0f});
+    postfilter_.push(oscillator_.MixUp(prefilter_.execute()).real());
+    result = postfilter_.execute().real();
+  } else {
+    result = oscillator_.MixUp({insample, 0.0f}).real();
+  }
+#else
+  result = oscillator_.MixUp({insample, 0.0f}).real();
+#endif
+
+  return result;
+}
+
 }  // namespace deinvert
 
 int main(int argc, char** argv) {
@@ -313,40 +355,55 @@ int main(int argc, char** argv) {
 #endif
     writer = new deinvert::RawPCMWriter();
 
+  static const std::vector<float> filter_lengths({
+      0.f, 0.0018f, 0.0036f, 0.0042f
+  });
+
   int filter_length = 2 * std::round(options.samplerate *
-                                     deinvert::kLowpassFilterLengthSeconds) + 1;
+                                     filter_lengths.at(options.quality)) + 1;
   filter_length = filter_length < deinvert::kMaxFilterLength ?
                   filter_length : deinvert::kMaxFilterLength;
 
-#ifdef HAVE_LIQUID
-  liquid::NCO oscillator(LIQUID_VCO,
-                         options.frequency * 2.0f * M_PI / options.samplerate);
-  liquid::FIRFilter prefilter(filter_length,
-                           options.frequency / options.samplerate);
-  liquid::FIRFilter postfilter(filter_length,
-                           (options.frequency - 150.f) / options.samplerate);
-#else
-  wdsp::NCO oscillator(options.frequency * 2.0f * M_PI / options.samplerate);
-#endif
+  if (options.is_split_band) {
+    static const std::vector<float> filter_gain_compensation({
+        0.5f, 1.4f, 1.8f, 1.8f
+    });
+    float gain = filter_gain_compensation.at(options.quality);
 
-  while (!reader->eof()) {
-    for (float insample : reader->ReadBlock()) {
-      oscillator.Step();
-      bool can_still_write = true;
-#ifdef HAVE_LIQUID
-      if (options.nofilter) {
-        can_still_write =
-            writer->push(oscillator.MixUp({insample, 0.0f}).real() * M_SQRT2);
-      } else {
-        prefilter.push({insample, 0.0f});
-        postfilter.push(oscillator.MixUp(prefilter.execute()).real());
-        can_still_write = writer->push(postfilter.execute().real() * 2.f);
+    deinvert::Inverter inverter1(options.frequency_lo, options.frequency_lo,
+                                 options.frequency_lo, options.samplerate,
+                                 filter_length, options.quality > 0);
+    deinvert::Inverter inverter2(options.frequency_hi,
+                                 options.frequency_lo + options.frequency_hi,
+                                 options.frequency_hi, options.samplerate,
+                                 filter_length, options.quality > 0);
+
+    while (!reader->eof()) {
+      for (float insample : reader->ReadBlock()) {
+        bool can_still_write = writer->push(gain *
+                                            (inverter1.execute(insample) +
+                                             inverter2.execute(insample)));
+        if (!can_still_write)
+          continue;
       }
-#else
-      can_still_write = writer->push(oscillator.MixUp({insample, 0.0f}).real());
-#endif
-      if (!can_still_write)
-        continue;
+    }
+  } else {
+    static const std::vector<float> filter_gain_compensation({
+        1.0f, 1.4f, 2.f, 2.f
+    });
+    float gain = filter_gain_compensation.at(options.quality);
+
+    deinvert::Inverter inverter(options.frequency_hi - 150.f,
+                                options.frequency_hi,
+                                options.frequency_hi, options.samplerate,
+                                filter_length, options.quality > 0);
+
+    while (!reader->eof()) {
+      for (float insample : reader->ReadBlock()) {
+        bool can_still_write = writer->push(gain * inverter.execute(insample));
+        if (!can_still_write)
+          continue;
+      }
     }
   }
 

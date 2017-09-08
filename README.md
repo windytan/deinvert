@@ -22,6 +22,10 @@ Descrambling a WAV file scrambled with setting 4:
 
     ./src/deinvert -i input.wav -o output.wav -p 4
 
+Descrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
+
+    ./src/deinvert -i input.wav -o output.wav -f 3500 -s 1200
+
 If no arguments are given deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and
 outputs in the same format via stdout. The inversion carrier defaults to 2632
 Hz.

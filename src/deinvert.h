@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "config.h"
+#include "src/liquid_wrappers.h"
 
 #ifdef HAVE_SNDFILE
 #include <sndfile.h>
@@ -43,15 +44,19 @@ enum eOutputType {
 
 struct Options {
   Options() : just_exit(false),
-              nofilter(false),
+              is_split_band(false),
+              quality(2),
               samplerate(kDefaultSampleRate_Hz),
-              frequency(1000),
               input_type(INPUT_STDIN),
               output_type(OUTPUT_RAW_STDOUT) {}
   bool just_exit;
-  bool nofilter;
+  bool is_split_band;
+  int quality;
+  float filter_length_seconds;
   float samplerate;
-  float frequency;
+  float frequency_lo;
+  float frequency_hi;
+  float split_frequency;
   eInputType input_type;
   eOutputType output_type;
   std::string infilename;
@@ -127,6 +132,23 @@ class SndfileWriter : public AudioWriter {
   size_t buffer_pos_;
 };
 #endif
+
+class Inverter {
+ public:
+  Inverter(float freq_prefilter, float freq_shift, float freq_postfilter,
+           float samplerate, int filter_length, bool do_filter);
+  float execute(float insample);
+
+ private:
+#ifdef HAVE_LIQUID
+  liquid::FIRFilter prefilter_;
+  liquid::FIRFilter postfilter_;
+  liquid::NCO oscillator_;
+#else
+  wdsp::NCO oscillator_;
+#endif
+  bool do_filter_;
+};
 
 }  // namespace deinvert
 #endif  // DEINVERT_H_
