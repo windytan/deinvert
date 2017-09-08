@@ -28,7 +28,7 @@ namespace liquid {
 
 class FIRFilter {
  public:
-  FIRFilter(int len, float fc, float As = 60.0f, float mu = 0.0f);
+  FIRFilter(int len, float fc, float As = 80.0f, float mu = 0.0f);
   ~FIRFilter();
   void push(std::complex<float> s);
   std::complex<float> execute();

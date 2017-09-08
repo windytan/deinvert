@@ -136,10 +136,12 @@ class SndfileWriter : public AudioWriter {
 class Inverter {
  public:
   Inverter(float freq_prefilter, float freq_shift, float freq_postfilter,
-           float samplerate, int filter_length, bool do_filter);
+           float samplerate, int filter_quality);
   float execute(float insample);
 
  private:
+  const std::vector<float> filter_lengths_;
+  const std::vector<float> filter_attenuation_;
 #ifdef HAVE_LIQUID
   liquid::FIRFilter prefilter_;
   liquid::FIRFilter postfilter_;
@@ -147,7 +149,7 @@ class Inverter {
 #else
   wdsp::NCO oscillator_;
 #endif
-  bool do_filter_;
+  const bool do_filter_;
 };
 
 }  // namespace deinvert

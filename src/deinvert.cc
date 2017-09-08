@@ -31,6 +31,15 @@ namespace {
 
 const int   kMaxFilterLength            = 2047;
 
+int FilterLengthInSamples(float len_seconds, float samplerate) {
+  int filter_length = 2 * std::round(samplerate *
+                                     len_seconds) + 1;
+  filter_length = filter_length < deinvert::kMaxFilterLength ?
+                  filter_length : deinvert::kMaxFilterLength;
+
+  return filter_length;
+}
+
 }
 
 void PrintUsage() {
@@ -302,13 +311,18 @@ bool SndfileWriter::write() {
 #endif
 
 Inverter::Inverter(float freq_prefilter, float freq_shift,
-                   float freq_postfilter, float samplerate, int filter_length,
-                   bool do_filter) :
+                   float freq_postfilter, float samplerate, int quality) :
 #ifdef HAVE_LIQUID
-    prefilter_(filter_length, freq_prefilter / samplerate),
-    postfilter_(filter_length, freq_postfilter / samplerate),
+    filter_lengths_({0.f, 0.0012f, 0.0024f, 0.0042f}),
+    filter_attenuation_({60.f, 60.f, 60.f, 80.f}),
+    prefilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
+               freq_prefilter / samplerate,
+               filter_attenuation_.at(quality)),
+    postfilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
+                freq_postfilter / samplerate,
+                filter_attenuation_.at(quality)),
     oscillator_(LIQUID_VCO, freq_shift * 2.0f * M_PI / samplerate),
-    do_filter_(do_filter)
+    do_filter_(quality > 0)
 #else
     oscillator_(freq_shift * 2.0f * M_PI / samplerate);
     do_filter_(false)
@@ -363,14 +377,6 @@ int main(int argc, char** argv) {
 #endif
     writer = new deinvert::RawPCMWriter();
 
-  static const std::vector<float> filter_lengths({
-      0.f, 0.0018f, 0.0036f, 0.0042f
-  });
-
-  int filter_length = 2 * std::round(options.samplerate *
-                                     filter_lengths.at(options.quality)) + 1;
-  filter_length = filter_length < deinvert::kMaxFilterLength ?
-                  filter_length : deinvert::kMaxFilterLength;
 
   if (options.is_split_band) {
     static const std::vector<float> filter_gain_compensation({
@@ -380,11 +386,11 @@ int main(int argc, char** argv) {
 
     deinvert::Inverter inverter1(options.frequency_lo, options.frequency_lo,
                                  options.frequency_lo, options.samplerate,
-                                 filter_length, options.quality > 0);
+                                 options.quality);
     deinvert::Inverter inverter2(options.frequency_hi,
                                  options.frequency_lo + options.frequency_hi,
                                  options.frequency_hi, options.samplerate,
-                                 filter_length, options.quality > 0);
+                                 options.quality);
 
     while (!reader->eof()) {
       for (float insample : reader->ReadBlock()) {
@@ -404,7 +410,7 @@ int main(int argc, char** argv) {
     deinvert::Inverter inverter(options.frequency_hi - 150.f,
                                 options.frequency_hi,
                                 options.frequency_hi, options.samplerate,
-                                filter_length, options.quality > 0);
+                                options.quality);
 
     while (!reader->eof()) {
       for (float insample : reader->ReadBlock()) {
