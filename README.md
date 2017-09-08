@@ -1,4 +1,7 @@
-deinvert is a descrambler for voice inversion scrambling.
+# deinvert
+
+deinvert is a descrambler for voice inversion scrambling. It supports
+simple inversion as well as split-band inversion.
 
 ## Prerequisites
 By default, deinvert requires
