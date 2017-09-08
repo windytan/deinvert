@@ -120,7 +120,7 @@ class SndfileWriter : public AudioWriter {
   bool push(float sample) override;
 
  private:
-  bool write(sf_count_t numsamples);
+  bool write();
   SF_INFO info_;
   SNDFILE* file_;
   float buffer_[kIOBufferSize];

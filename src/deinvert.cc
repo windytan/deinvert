@@ -263,7 +263,7 @@ SndfileWriter::SndfileWriter(const std::string& fname, int rate) :
 }
 
 SndfileWriter::~SndfileWriter() {
-  write(buffer_pos_);
+  write();
   sf_close(file_);
 }
 
@@ -271,16 +271,17 @@ bool SndfileWriter::push(float sample) {
   bool success = true;
   buffer_[buffer_pos_] = sample;
   if (buffer_pos_ == kIOBufferSize - 1) {
-    success = write(buffer_pos_);
+    success = write();
   }
 
   buffer_pos_ = (buffer_pos_ + 1) % kIOBufferSize;
   return success;
 }
 
-bool SndfileWriter::write(sf_count_t numsamples) {
+bool SndfileWriter::write() {
+  sf_count_t num_to_write = buffer_pos_ + 1;
   return (file_ != nullptr &&
-          sf_write_float(file_, buffer_, numsamples) == numsamples);
+          sf_write_float(file_, buffer_, num_to_write) == num_to_write);
 }
 #endif
 
