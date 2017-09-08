@@ -29,11 +29,11 @@ Descrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
 
     ./src/deinvert -i input.wav -o output.wav -f 3500 -s 1200
 
-Since scrambling and descrambling are exactly the same operation this tool also
-works as a scrambler.
+Note that since scrambling and descrambling are exactly the same operation this
+tool also works as a scrambler.
 
-If no arguments are given deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and
-outputs in the same format via stdout. The inversion carrier defaults to 3339
+If no arguments are given, deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and
+outputs in the same format via stdout. The inversion carrier defaults to 2632
 Hz.
 
     ./src/deinvert [OPTIONS]
