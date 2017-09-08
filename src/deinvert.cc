@@ -29,6 +29,7 @@ namespace deinvert {
 
 namespace {
 
+#ifdef HAVE_LIQUID
 const int   kMaxFilterLength            = 2047;
 
 int FilterLengthInSamples(float len_seconds, float samplerate) {
@@ -39,6 +40,7 @@ int FilterLengthInSamples(float len_seconds, float samplerate) {
 
   return filter_length;
 }
+#endif
 
 }
 
@@ -100,6 +102,12 @@ Options GetOptions(int argc, char** argv) {
 
   options.frequency_hi = selectone_carriers.at(0);
 
+#ifdef HAVE_LIQUID
+  options.quality = 2;
+#else
+  options.quality = 0;
+#endif
+
   int option_index = 0;
   int option_char;
   int selectone_num;
@@ -146,12 +154,17 @@ Options GetOptions(int argc, char** argv) {
         }
         break;
       case 'q':
+#ifdef LIQUID
         options.quality = std::atoi(optarg);
         if (options.quality < 0 || options.quality > 3) {
           std::cerr << "error: please specify filter quality from 0 to 3"
                     << std::endl;
           options.just_exit = true;
         }
+#else
+        std::cerr << "warning: deinvert was built without liquid-dsp, "
+                  << "filtering disabled" << std::endl;
+#endif
         break;
       case 'r':
         options.samplerate = std::atoi(optarg);
@@ -177,6 +190,12 @@ Options GetOptions(int argc, char** argv) {
     }
     if (options.just_exit)
       break;
+  }
+
+  if (options.is_split_band && options.frequency_lo >= options.frequency_hi) {
+    std::cerr << "error: split point should be below the inversion carrier"
+              << std::endl;
+    options.just_exit = true;
   }
 
   return options;
@@ -324,7 +343,7 @@ Inverter::Inverter(float freq_prefilter, float freq_shift,
     oscillator_(LIQUID_VCO, freq_shift * 2.0f * M_PI / samplerate),
     do_filter_(quality > 0)
 #else
-    oscillator_(freq_shift * 2.0f * M_PI / samplerate);
+    oscillator_(freq_shift * 2.0f * M_PI / samplerate),
     do_filter_(false)
 #endif
 {}

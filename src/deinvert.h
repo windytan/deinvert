@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include "src/liquid_wrappers.h"
+#include "src/wdsp.h"
 
 #ifdef HAVE_SNDFILE
 #include <sndfile.h>
@@ -45,7 +46,6 @@ enum eOutputType {
 struct Options {
   Options() : just_exit(false),
               is_split_band(false),
-              quality(2),
               samplerate(kDefaultSampleRate_Hz),
               input_type(INPUT_STDIN),
               output_type(OUTPUT_RAW_STDOUT) {}
