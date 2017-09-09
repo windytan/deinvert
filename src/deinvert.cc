@@ -332,7 +332,7 @@ bool SndfileWriter::write() {
 Inverter::Inverter(float freq_prefilter, float freq_shift,
                    float freq_postfilter, float samplerate, int quality) :
 #ifdef HAVE_LIQUID
-    filter_lengths_({0.f, 0.0012f, 0.0024f, 0.0042f}),
+    filter_lengths_({0.f, 0.0006f, 0.0024f, 0.0042f}),
     filter_attenuation_({60.f, 60.f, 60.f, 80.f}),
     prefilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
                freq_prefilter / samplerate,
