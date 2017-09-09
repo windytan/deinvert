@@ -154,7 +154,7 @@ Options GetOptions(int argc, char** argv) {
         }
         break;
       case 'q':
-#ifdef LIQUID
+#ifdef HAVE_LIQUID
         options.quality = std::atoi(optarg);
         if (options.quality < 0 || options.quality > 3) {
           std::cerr << "error: please specify filter quality from 0 to 3"
