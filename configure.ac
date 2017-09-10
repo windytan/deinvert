@@ -42,7 +42,7 @@ AS_IF([test "x$with_sndfile" != xno],
                [Define if you have libsndfile])
     ],
     [AC_MSG_FAILURE(
-       [Could not find libsndfile (use --without-sndfile to disable])])])
+       [Could not find libsndfile (use --without-sndfile to disable)])])])
 
 AC_PROG_CXX
 AC_PROG_RANLIB
