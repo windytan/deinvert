@@ -332,7 +332,7 @@ bool SndfileWriter::write() {
 Inverter::Inverter(float freq_prefilter, float freq_shift,
                    float freq_postfilter, float samplerate, int quality) :
 #ifdef HAVE_LIQUID
-    filter_lengths_({0.f, 0.0006f, 0.0024f, 0.0042f}),
+    filter_lengths_({0.f, 0.0006f, 0.0024f, 0.0064f}),
     filter_attenuation_({60.f, 60.f, 60.f, 80.f}),
     prefilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
                freq_prefilter / samplerate,
@@ -422,7 +422,7 @@ int main(int argc, char** argv) {
     }
   } else {
     static const std::vector<float> filter_gain_compensation({
-        1.0f, 1.4f, 2.f, 2.f
+        1.0f, 1.4f, 1.8f, 1.8f
     });
     float gain = filter_gain_compensation.at(options.quality);
 
