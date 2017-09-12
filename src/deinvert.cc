@@ -146,7 +146,7 @@ Options GetOptions(int argc, char** argv) {
         selectone_num = std::atoi(optarg);
         if (selectone_num >= 1 &&
             selectone_num <= 8) {
-          options.frequency_lo = selectone_carriers.at(selectone_num - 1);
+          options.frequency_hi = selectone_carriers.at(selectone_num - 1);
         } else {
           std::cerr << "error: please specify scrambler group from 1 to 8"
                     << std::endl;
