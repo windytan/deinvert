@@ -30,18 +30,17 @@ class FIRFilter {
  public:
   FIRFilter(int len, float fc, float As = 80.0f, float mu = 0.0f);
   ~FIRFilter();
-  void push(std::complex<float> s);
-  std::complex<float> execute();
+  void push(float s);
+  float execute();
 
  private:
-  firfilt_crcf object_;
+  firfilt_rrrf object_;
 };
 
 class NCO {
  public:
   explicit NCO(liquid_ncotype type, float freq);
   ~NCO();
-  std::complex<float> MixDown(std::complex<float> s);
   std::complex<float> MixUp(std::complex<float> s);
   void Step();
   float frequency();

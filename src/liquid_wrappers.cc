@@ -31,21 +31,21 @@ FIRFilter::FIRFilter(int len, float fc, float As, float mu) {
   assert(As > 0.0f);
   assert(mu >= -0.5f && mu <= 0.5f);
 
-  object_ = firfilt_crcf_create_kaiser(len, fc, As, mu);
-  firfilt_crcf_set_scale(object_, 2.0f * fc);
+  object_ = firfilt_rrrf_create_kaiser(len, fc, As, mu);
+  firfilt_rrrf_set_scale(object_, 2.0f * fc);
 }
 
 FIRFilter::~FIRFilter() {
-  firfilt_crcf_destroy(object_);
+  firfilt_rrrf_destroy(object_);
 }
 
-void FIRFilter::push(std::complex<float> s) {
-  firfilt_crcf_push(object_, s);
+void FIRFilter::push(float s) {
+  firfilt_rrrf_push(object_, s);
 }
 
-std::complex<float> FIRFilter::execute() {
-  std::complex<float> result;
-  firfilt_crcf_execute(object_, &result);
+float FIRFilter::execute() {
+  float result;
+  firfilt_rrrf_execute(object_, &result);
   return result;
 }
 
@@ -56,12 +56,6 @@ NCO::NCO(liquid_ncotype type, float freq) :
 
 NCO::~NCO() {
   nco_crcf_destroy(object_);
-}
-
-std::complex<float> NCO::MixDown(std::complex<float> s) {
-  std::complex<float> result;
-  nco_crcf_mix_down(object_, s, &result);
-  return result;
 }
 
 std::complex<float> NCO::MixUp(std::complex<float> s) {

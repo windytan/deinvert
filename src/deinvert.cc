@@ -355,9 +355,9 @@ float Inverter::execute(float insample) {
 
 #ifdef HAVE_LIQUID
   if (do_filter_) {
-    prefilter_.push({insample, 0.0f});
+    prefilter_.push(insample);
     postfilter_.push(oscillator_.MixUp(prefilter_.execute()).real());
-    result = postfilter_.execute().real();
+    result = postfilter_.execute();
   } else {
     result = oscillator_.MixUp({insample, 0.0f}).real();
   }
