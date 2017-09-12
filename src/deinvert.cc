@@ -296,12 +296,14 @@ int main(int argc, char** argv) {
   deinvert::AudioReader* reader;
   deinvert::AudioWriter* writer;
 
+  if (options.input_type == deinvert::INPUT_SNDFILE) {
 #ifdef HAVE_SNDFILE
-  if (options.input_type == deinvert::INPUT_SNDFILE)
     reader = new deinvert::SndfileReader(options);
-  else
+    options.samplerate = reader->samplerate();
 #endif
+  } else {
     reader = new deinvert::StdinReader(options);
+  }
 
 #ifdef HAVE_SNDFILE
   if (options.output_type == deinvert::OUTPUT_WAVFILE)
