@@ -63,7 +63,7 @@ void PrintUsage() {
      "                       e.g. the Selectone ST-20B scrambler.\n"
      "\n"
      "-q, --quality NUM      Filter quality, from 0 (worst and fastest) to\n"
-     "                       3 (best and slowest). The default is 2.\n"
+     "                       4 (best and slowest). The default is 2.\n"
      "\n"
      "-r, --samplerate RATE  Sampling rate of raw input audio, in Hertz.\n"
      "\n"
@@ -156,8 +156,8 @@ Options GetOptions(int argc, char** argv) {
       case 'q':
 #ifdef HAVE_LIQUID
         options.quality = std::atoi(optarg);
-        if (options.quality < 0 || options.quality > 3) {
-          std::cerr << "error: please specify filter quality from 0 to 3"
+        if (options.quality < 0 || options.quality > 4) {
+          std::cerr << "error: please specify filter quality from 0 to 4"
                     << std::endl;
           options.just_exit = true;
         }
@@ -332,8 +332,8 @@ bool SndfileWriter::write() {
 Inverter::Inverter(float freq_prefilter, float freq_shift,
                    float freq_postfilter, float samplerate, int quality) :
 #ifdef HAVE_LIQUID
-    filter_lengths_({0.f, 0.0006f, 0.0024f, 0.0064f}),
-    filter_attenuation_({60.f, 60.f, 60.f, 80.f}),
+    filter_lengths_({0.f, 0.0006f, 0.0024f, 0.0064f, 0.0128f}),
+    filter_attenuation_({60.f, 60.f, 60.f, 80.f, 80.f}),
     prefilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
                freq_prefilter / samplerate,
                filter_attenuation_.at(quality)),
@@ -399,7 +399,7 @@ int main(int argc, char** argv) {
 
   if (options.is_split_band) {
     static const std::vector<float> filter_gain_compensation({
-        0.5f, 1.4f, 1.8f, 1.8f
+        0.5f, 1.4f, 1.8f, 1.8f, 1.8f
     });
     float gain = filter_gain_compensation.at(options.quality);
 
@@ -422,11 +422,11 @@ int main(int argc, char** argv) {
     }
   } else {
     static const std::vector<float> filter_gain_compensation({
-        1.0f, 1.4f, 1.8f, 1.8f
+        1.0f, 1.4f, 1.8f, 1.8f, 1.8f
     });
     float gain = filter_gain_compensation.at(options.quality);
 
-    deinvert::Inverter inverter(options.frequency_hi - 150.f,
+    deinvert::Inverter inverter(options.frequency_hi,
                                 options.frequency_hi,
                                 options.frequency_hi, options.samplerate,
                                 options.quality);
