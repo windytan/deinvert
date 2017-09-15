@@ -18,6 +18,7 @@
 #include "src/deinvert.h"
 
 #include <getopt.h>
+#include <exception>
 #include <iostream>
 #include <string>
 
@@ -121,9 +122,7 @@ Options GetOptions(int argc, char** argv) {
         options.infilename = std::string(optarg);
         options.input_type = deinvert::INPUT_SNDFILE;
 #else
-        std::cerr << "error: deinvert was compiled without libsndfile"
-                  << std::endl;
-        options.just_exit = true;
+        throw std::runtime_error("deinvert was compiled without libsndfile");
 #endif
         break;
       case 'f':
@@ -137,30 +136,23 @@ Options GetOptions(int argc, char** argv) {
         options.output_type = deinvert::OUTPUT_WAVFILE;
         options.outfilename = std::string(optarg);
 #else
-        std::cerr << "error: deinvert was compiled without libsndfile"
-                  << std::endl;
-        options.just_exit = true;
+        throw std::runtime_error("deinvert was compiled without libsndfile");
 #endif
         break;
       case 'p':
         selectone_num = std::atoi(optarg);
         if (selectone_num >= 1 &&
-            selectone_num <= 8) {
+            selectone_num <= 8)
           options.frequency_hi = selectone_carriers.at(selectone_num - 1);
-        } else {
-          std::cerr << "error: please specify scrambler group from 1 to 8"
-                    << std::endl;
-          options.just_exit = true;
-        }
+        else
+          throw
+              std::runtime_error("preset should be a number from 1 to 8");
         break;
       case 'q':
 #ifdef HAVE_LIQUID
         options.quality = std::atoi(optarg);
-        if (options.quality < 0 || options.quality > 3) {
-          std::cerr << "error: please specify filter quality from 0 to 3"
-                    << std::endl;
-          options.just_exit = true;
-        }
+        if (options.quality < 0 || options.quality > 3)
+          throw std::runtime_error("please specify filter quality from 0 to 3");
 #else
         std::cerr << "warning: deinvert was built without liquid-dsp, "
                   << "filtering disabled" << std::endl;
@@ -168,11 +160,6 @@ Options GetOptions(int argc, char** argv) {
         break;
       case 'r':
         options.samplerate = std::atoi(optarg);
-        if (options.samplerate < 6000.f) {
-          std::cerr << "error: sample rate must be 6000 Hz or higher"
-                    << std::endl;
-          options.just_exit = true;
-        }
         break;
       case 's':
         options.frequency_lo = std::atoi(optarg);
@@ -192,11 +179,13 @@ Options GetOptions(int argc, char** argv) {
       break;
   }
 
-  if (options.is_split_band && options.frequency_lo >= options.frequency_hi) {
-    std::cerr << "error: split point should be below the inversion carrier"
-              << std::endl;
-    options.just_exit = true;
-  }
+  if (options.is_split_band && options.frequency_lo >= options.frequency_hi)
+    throw
+        std::runtime_error("split point must be below the inversion carrier");
+
+  if (options.samplerate < options.frequency_hi * 2.0f)
+    throw std::runtime_error(
+        "sample rate must be at least twice the inversion frequency");
 
   return options;
 }
@@ -217,7 +206,8 @@ StdinReader::~StdinReader() {
 }
 
 std::vector<float> StdinReader::ReadBlock() {
-  int num_read = fread(buffer_, sizeof(buffer_[0]), kIOBufferSize, stdin);
+  int num_read =
+      fread(buffer_.data(), sizeof(buffer_[0]), kIOBufferSize, stdin);
 
   if (num_read < kIOBufferSize)
     is_eof_ = true;
@@ -239,12 +229,11 @@ SndfileReader::SndfileReader(const Options& options) :
     file_(sf_open(options.infilename.c_str(), SFM_READ, &info_)) {
   is_eof_ = false;
   if (file_ == nullptr) {
-    std::cerr << options.infilename << ": " << sf_strerror(nullptr) <<
-                 std::endl;
+    throw std::runtime_error(options.infilename + ": " + sf_strerror(nullptr));
     is_eof_ = true;
-  } else if (info_.samplerate < 6000.f) {
-    std::cerr << "error: sample rate must be 6000 Hz or higher" << std::endl;
-    is_eof_ = true;
+  } else if (info_.samplerate < options.frequency_hi * 2.0f) {
+    throw std::runtime_error(
+        "sample rate must be at least twice the inversion frequency");
   }
 }
 
@@ -259,12 +248,12 @@ std::vector<float> SndfileReader::ReadBlock() {
 
   int to_read = kIOBufferSize / info_.channels;
 
-  sf_count_t num_read = sf_readf_float(file_, buffer_, to_read);
+  sf_count_t num_read = sf_readf_float(file_, buffer_.data(), to_read);
   if (num_read != to_read)
     is_eof_ = true;
 
   if (info_.channels == 1) {
-    result = std::vector<float>(buffer_, buffer_ + num_read);
+    result = std::vector<float>(buffer_.begin(), buffer_.begin() + num_read);
   } else {
     result = std::vector<float>(num_read);
     for (size_t i = 0; i < result.size(); i++)
@@ -300,10 +289,8 @@ SndfileWriter::SndfileWriter(const std::string& fname, int rate) :
     info_({0, rate, 1, SF_FORMAT_WAV | SF_FORMAT_PCM_16, 0, 0}),
     file_(sf_open(fname.c_str(), SFM_WRITE, &info_)),
     buffer_pos_(0) {
-  if (file_ == nullptr) {
-    std::cerr << fname << ": " << sf_strerror(nullptr) <<
-                 std::endl;
-  }
+  if (file_ == nullptr)
+    throw std::runtime_error(fname + ": " + sf_strerror(nullptr));
 }
 
 SndfileWriter::~SndfileWriter() {
@@ -371,7 +358,14 @@ float Inverter::execute(float insample) {
 }  // namespace deinvert
 
 int main(int argc, char** argv) {
-  deinvert::Options options = deinvert::GetOptions(argc, argv);
+  deinvert::Options options;
+
+  try {
+    options = deinvert::GetOptions(argc, argv);
+  } catch (std::exception& e) {
+    std::cerr << "error: " << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
 
   if (options.just_exit)
     return EXIT_FAILURE;
@@ -381,7 +375,12 @@ int main(int argc, char** argv) {
 
   if (options.input_type == deinvert::INPUT_SNDFILE) {
 #ifdef HAVE_SNDFILE
-    reader = new deinvert::SndfileReader(options);
+    try {
+      reader = new deinvert::SndfileReader(options);
+    } catch (std::exception& e) {
+      std::cerr << e.what() << std::endl;
+      return EXIT_FAILURE;
+    }
     options.samplerate = reader->samplerate();
 #endif
   } else {
@@ -389,13 +388,18 @@ int main(int argc, char** argv) {
   }
 
 #ifdef HAVE_SNDFILE
-  if (options.output_type == deinvert::OUTPUT_WAVFILE)
-    writer = new deinvert::SndfileWriter(options.outfilename,
-                                         options.samplerate);
-  else
+  if (options.output_type == deinvert::OUTPUT_WAVFILE) {
+    try {
+      writer = new deinvert::SndfileWriter(options.outfilename,
+                                           options.samplerate);
+    } catch (std::exception& e) {
+      std::cerr << e.what() << std::endl;
+      return EXIT_FAILURE;
+    }
+  } else {
 #endif
     writer = new deinvert::RawPCMWriter();
-
+  }
 
   if (options.is_split_band) {
     static const std::vector<float> filter_gain_compensation({
