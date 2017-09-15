@@ -19,6 +19,7 @@
 #define DEINVERT_H_
 
 #include <cstdint>
+#include <array>
 #include <string>
 #include <vector>
 
@@ -83,7 +84,7 @@ class StdinReader : public AudioReader {
 
  private:
   float samplerate_;
-  int16_t buffer_[kIOBufferSize];
+  std::array<int16_t, kIOBufferSize> buffer_;
 };
 
 #ifdef HAVE_SNDFILE
@@ -97,7 +98,7 @@ class SndfileReader : public AudioReader {
  private:
   SF_INFO info_;
   SNDFILE* file_;
-  float buffer_[kIOBufferSize];
+  std::array<float, kIOBufferSize> buffer_;
 };
 #endif
 
@@ -113,7 +114,7 @@ class RawPCMWriter : public AudioWriter {
   bool push(float sample) override;
 
  private:
-  int16_t buffer_[kIOBufferSize];
+  std::array<int16_t, kIOBufferSize> buffer_;
   size_t buffer_pos_;
 };
 
@@ -128,7 +129,7 @@ class SndfileWriter : public AudioWriter {
   bool write();
   SF_INFO info_;
   SNDFILE* file_;
-  float buffer_[kIOBufferSize];
+  std::array<float, kIOBufferSize> buffer_;
   size_t buffer_pos_;
 };
 #endif

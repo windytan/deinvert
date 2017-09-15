@@ -278,7 +278,7 @@ bool RawPCMWriter::push(float sample) {
   buffer_[buffer_pos_] = outsample;
   buffer_pos_++;
   if (buffer_pos_ == kIOBufferSize) {
-    fwrite(buffer_, sizeof(buffer_[0]), kIOBufferSize, stdout);
+    fwrite(buffer_.data(), sizeof(buffer_[0]), kIOBufferSize, stdout);
     buffer_pos_ = 0;
   }
   return true;
@@ -312,7 +312,7 @@ bool SndfileWriter::push(float sample) {
 bool SndfileWriter::write() {
   sf_count_t num_to_write = buffer_pos_ + 1;
   return (file_ != nullptr &&
-          sf_write_float(file_, buffer_, num_to_write) == num_to_write);
+          sf_write_float(file_, buffer_.data(), num_to_write) == num_to_write);
 }
 #endif
 
