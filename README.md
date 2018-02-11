@@ -61,6 +61,19 @@ Hz.
 
     -v, --version          Display version string.
 
+## Inversion carrier presets
+
+| No | Frequency |
+| -- | --------- |
+|  1 | 2632 Hz   |
+|  2 | 2718 Hz   |
+|  3 | 2868 Hz   |
+|  4 | 3023 Hz   |
+|  5 | 3196 Hz   |
+|  6 | 3339 Hz   |
+|  7 | 3495 Hz   |
+|  8 | 3729 Hz   |
+
 ## Troubleshooting
 
 ### Can't find liquid-dsp on macOS
