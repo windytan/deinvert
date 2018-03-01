@@ -33,5 +33,16 @@ class NCO {
   double phase_;
 };
 
+class DCRemover {
+ public:
+  explicit DCRemover(size_t length);
+  void push(float sample);
+  float execute(float sample);
+
+ private:
+  std::vector<float> buffer_;
+  size_t index_;
+};
+
 }  // namespace wdsp
 #endif  // WDSP_H_
