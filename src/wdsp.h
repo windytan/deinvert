@@ -43,6 +43,7 @@ class DCRemover {
  private:
   std::vector<float> buffer_;
   size_t index_;
+  bool is_filled_;
 };
 
 }  // namespace wdsp

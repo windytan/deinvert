@@ -33,13 +33,17 @@ std::complex<float> NCO::MixUp(std::complex<float> sample_in) const {
           imag(sample_in) * cosf(phase_) + real(sample_in) * sinf(phase_)};
 }
 
-DCRemover::DCRemover(size_t length) : buffer_(length), index_(0) {
+DCRemover::DCRemover(size_t length) : buffer_(length), index_(0),
+                                      is_filled_(false) {
 }
 
 void DCRemover::push(float sample) {
   if (buffer_.size() > 0) {
     buffer_[index_] = sample;
-    index_ = (index_ + 1) % buffer_.size();;
+    index_ = (index_ + 1) % buffer_.size();
+
+    if (index_ == 0)
+      is_filled_ = true;
   }
 }
 
@@ -51,7 +55,12 @@ float DCRemover::execute(float sample) {
     for (float s : buffer_)
       sum += s;
 
-    return sample - (sum / buffer_.size());
+    if (is_filled_)
+      sum /= buffer_.size();
+    else
+      sum /= (index_ == 0 ? 1 : index_);
+
+    return sample - sum;
   }
 }
 
