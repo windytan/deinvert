@@ -230,7 +230,6 @@ SndfileReader::SndfileReader(const Options& options) :
   is_eof_ = false;
   if (file_ == nullptr) {
     throw std::runtime_error(options.infilename + ": " + sf_strerror(nullptr));
-    is_eof_ = true;
   } else if (info_.samplerate < options.frequency_hi * 2.0f) {
     throw std::runtime_error(
         "sample rate must be at least twice the inversion frequency");
