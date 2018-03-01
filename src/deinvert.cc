@@ -347,14 +347,76 @@ float Inverter::execute(float insample) {
   } else {
     result = oscillator_.MixUp({insample, 0.0f}).real();
   }
-#else
-  result = oscillator_.MixUp({insample, 0.0f}).real();
-#endif
 
   return result;
 }
 
 }  // namespace deinvert
+
+void SimpleDescramble(deinvert::Options options,
+                      deinvert::AudioReader* reader,
+                      deinvert::AudioWriter* writer) {
+  static const std::vector<float> filter_gain_compensation({
+      1.0f, 1.4f, 1.8f, 1.8f
+  });
+  float gain = filter_gain_compensation.at(options.quality);
+
+  int dc_remover_length =
+      (options.quality * options.samplerate * 0.002f);
+
+  wdsp::DCRemover dcremover(dc_remover_length);
+
+  deinvert::Inverter inverter(options.frequency_hi,
+                              options.frequency_hi,
+                              options.frequency_hi, options.samplerate,
+                              options.quality);
+
+  while (!reader->eof()) {
+    for (float insample : reader->ReadBlock()) {
+      dcremover.push(insample);
+      bool can_still_write =
+          writer->push(gain * inverter.execute(dcremover.execute(insample)));
+      if (!can_still_write)
+        continue;
+    }
+  }
+}
+
+void SplitBandDescramble(deinvert::Options options,
+                         deinvert::AudioReader* reader,
+                         deinvert::AudioWriter* writer) {
+  static const std::vector<float> filter_gain_compensation({
+      0.5f, 1.4f, 1.8f, 1.8f
+      });
+  float gain = filter_gain_compensation.at(options.quality);
+
+  int dc_remover_length =
+      (options.quality * options.samplerate * 0.002f);
+
+  wdsp::DCRemover dcremover(dc_remover_length);
+
+  deinvert::Inverter inverter1(options.frequency_lo, options.frequency_lo,
+      options.frequency_lo, options.samplerate,
+      options.quality);
+  deinvert::Inverter inverter2(options.frequency_hi,
+      options.frequency_lo + options.frequency_hi,
+      options.frequency_hi, options.samplerate,
+      options.quality);
+
+  while (!reader->eof()) {
+    for (float insample : reader->ReadBlock()) {
+
+      dcremover.push(insample);
+      float dcremoved = dcremover.execute(insample);
+
+      bool can_still_write = writer->push(gain *
+          (inverter1.execute(dcremoved) +
+           inverter2.execute(dcremoved)));
+      if (!can_still_write)
+        continue;
+    }
+  }
+}
 
 int main(int argc, char** argv) {
   deinvert::Options options;
@@ -401,46 +463,9 @@ int main(int argc, char** argv) {
   }
 
   if (options.is_split_band) {
-    static const std::vector<float> filter_gain_compensation({
-        0.5f, 1.4f, 1.8f, 1.8f
-    });
-    float gain = filter_gain_compensation.at(options.quality);
-
-    deinvert::Inverter inverter1(options.frequency_lo, options.frequency_lo,
-                                 options.frequency_lo, options.samplerate,
-                                 options.quality);
-    deinvert::Inverter inverter2(options.frequency_hi,
-                                 options.frequency_lo + options.frequency_hi,
-                                 options.frequency_hi, options.samplerate,
-                                 options.quality);
-
-    while (!reader->eof()) {
-      for (float insample : reader->ReadBlock()) {
-        bool can_still_write = writer->push(gain *
-                                            (inverter1.execute(insample) +
-                                             inverter2.execute(insample)));
-        if (!can_still_write)
-          continue;
-      }
-    }
+    SplitBandDescramble(options, reader, writer);
   } else {
-    static const std::vector<float> filter_gain_compensation({
-        1.0f, 1.4f, 1.8f, 1.8f
-    });
-    float gain = filter_gain_compensation.at(options.quality);
-
-    deinvert::Inverter inverter(options.frequency_hi,
-                                options.frequency_hi,
-                                options.frequency_hi, options.samplerate,
-                                options.quality);
-
-    while (!reader->eof()) {
-      for (float insample : reader->ReadBlock()) {
-        bool can_still_write = writer->push(gain * inverter.execute(insample));
-        if (!can_still_write)
-          continue;
-      }
-    }
+    SimpleDescramble(options, reader, writer);
   }
 
   delete reader;
