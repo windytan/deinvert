@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([deinvert], [0.1.1], [oona@kapsi.fi], [deinvert],
+AC_INIT([deinvert], [0.2], [oona@kapsi.fi], [deinvert],
         [https://github.com/windytan/deinvert])
 AM_INIT_AUTOMAKE([1.10 -Wall -Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
