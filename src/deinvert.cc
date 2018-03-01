@@ -347,6 +347,9 @@ float Inverter::execute(float insample) {
   } else {
     result = oscillator_.MixUp({insample, 0.0f}).real();
   }
+#else
+  result = oscillator_.MixUp({insample, 0.0f}).real();
+#endif
 
   return result;
 }

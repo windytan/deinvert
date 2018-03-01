@@ -19,6 +19,7 @@
 #define WDSP_H_
 
 #include <complex>
+#include <vector>
 
 namespace wdsp {
 
