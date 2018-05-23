@@ -43,7 +43,7 @@ int FilterLengthInSamples(float len_seconds, float samplerate) {
 }
 #endif
 
-}
+}  // namespace
 
 void PrintUsage() {
   std::cout <<
@@ -112,6 +112,9 @@ Options GetOptions(int argc, char** argv) {
   int option_index = 0;
   int option_char;
   int selectone_num;
+  bool samplerate_set = false;
+  bool carrier_frequency_set = false;
+  bool carrier_preset_set = false;
 
   while ((option_char = getopt_long(argc, argv, "f:hi:no:p:q:r:s:v",
                                     long_options,
@@ -127,6 +130,7 @@ Options GetOptions(int argc, char** argv) {
         break;
       case 'f':
         options.frequency_hi = std::atoi(optarg);
+        carrier_frequency_set = true;
         break;
       case 'n':
         options.quality = 0;
@@ -141,6 +145,7 @@ Options GetOptions(int argc, char** argv) {
         break;
       case 'p':
         selectone_num = std::atoi(optarg);
+        carrier_preset_set = true;
         if (selectone_num >= 1 &&
             selectone_num <= 8)
           options.frequency_hi = selectone_carriers.at(selectone_num - 1);
@@ -160,6 +165,7 @@ Options GetOptions(int argc, char** argv) {
         break;
       case 'r':
         options.samplerate = std::atoi(optarg);
+        samplerate_set = true;
         break;
       case 's':
         options.frequency_lo = std::atoi(optarg);
@@ -178,6 +184,13 @@ Options GetOptions(int argc, char** argv) {
     if (options.just_exit)
       break;
   }
+
+  if (!carrier_preset_set && !carrier_frequency_set)
+    std::cerr << "deinvert: warning: carrier frequency not set, trying "
+              << "2632 Hz\n";
+
+  if (options.input_type == deinvert::INPUT_STDIN && !samplerate_set)
+    std::cerr << "deinvert: warning: sample rate not set, trying 44100 Hz\n";
 
   if (options.is_split_band && options.frequency_lo >= options.frequency_hi)
     throw
@@ -451,8 +464,8 @@ int main(int argc, char** argv) {
     reader = new deinvert::StdinReader(options);
   }
 
-#ifdef HAVE_SNDFILE
   if (options.output_type == deinvert::OUTPUT_WAVFILE) {
+#ifdef HAVE_SNDFILE
     try {
       writer = new deinvert::SndfileWriter(options.outfilename,
                                            options.samplerate);

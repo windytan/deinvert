@@ -29,12 +29,16 @@ Descrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
 
     ./src/deinvert -i input.wav -o output.wav -f 3500 -s 1200
 
+Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
+
+    rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./src/deinvert -r 12000 -p 4
+
 Note that since scrambling and descrambling are the same operation this
 tool also works as a scrambler.
 
-If no arguments are given, deinvert reads raw 16-bit, 44.1 kHz PCM via stdin and
-outputs in the same format via stdout. The inversion carrier defaults to 2632
-Hz.
+If no input and output file is given, deinvert reads raw 16-bit PCM via stdin
+and outputs in the same format via stdout. The inversion carrier defaults to
+2632 Hz.
 
     ./src/deinvert [OPTIONS]
 
@@ -52,8 +56,9 @@ Hz.
                            the set of common carrier frequencies used by
                            e.g. the Selectone ST-20B scrambler.
 
-    -q, --quality NUM      Filter quality, from 0 (worst and fastest) to
-                           3 (best and slowest). The default is 2.
+    -q, --quality NUM      Filter quality, from 0 (worst quality, low CPU
+                           usage) to 3 (best quality, higher CPU usage). The
+                           default is 2.
 
     -r, --samplerate RATE  Sampling rate of raw input audio, in Hertz.
 

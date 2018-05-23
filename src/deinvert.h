@@ -33,7 +33,6 @@
 
 namespace deinvert {
 
-const float kDefaultSampleRate_Hz = 44100.0f;
 const int   kIOBufferSize         = 4096;
 
 enum eInputType {
@@ -47,13 +46,13 @@ enum eOutputType {
 struct Options {
   Options() : just_exit(false),
               is_split_band(false),
-              samplerate(kDefaultSampleRate_Hz),
+              quality(2),
+              samplerate(44100),
               input_type(INPUT_STDIN),
               output_type(OUTPUT_RAW_STDOUT) {}
   bool just_exit;
   bool is_split_band;
   int quality;
-  float filter_length_seconds;
   float samplerate;
   float frequency_lo;
   float frequency_hi;
