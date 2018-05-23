@@ -123,7 +123,7 @@ Options GetOptions(int argc, char** argv) {
       case 'i':
 #ifdef HAVE_SNDFILE
         options.infilename = std::string(optarg);
-        options.input_type = deinvert::INPUT_SNDFILE;
+        options.input_type = deinvert::InputType::sndfile;
 #else
         throw std::runtime_error("deinvert was compiled without libsndfile");
 #endif
@@ -137,7 +137,7 @@ Options GetOptions(int argc, char** argv) {
         break;
       case 'o':
 #ifdef HAVE_SNDFILE
-        options.output_type = deinvert::OUTPUT_WAVFILE;
+        options.output_type = deinvert::OutputType::wavfile;
         options.outfilename = std::string(optarg);
 #else
         throw std::runtime_error("deinvert was compiled without libsndfile");
@@ -189,7 +189,7 @@ Options GetOptions(int argc, char** argv) {
     std::cerr << "deinvert: warning: carrier frequency not set, trying "
               << "2632 Hz\n";
 
-  if (options.input_type == deinvert::INPUT_STDIN && !samplerate_set)
+  if (options.input_type == deinvert::InputType::stdin && !samplerate_set)
     std::cerr << "deinvert: warning: sample rate not set, trying 44100 Hz\n";
 
   if (options.is_split_band && options.frequency_lo >= options.frequency_hi)
@@ -329,18 +329,21 @@ bool SndfileWriter::write() {
 #endif
 
 Inverter::Inverter(float freq_prefilter, float freq_shift,
-                   float freq_postfilter, float samplerate, int quality) :
+                   float freq_postfilter, float samplerate,
+                   int filter_quality) :
 #ifdef HAVE_LIQUID
     filter_lengths_({0.f, 0.0006f, 0.0024f, 0.0064f}),
     filter_attenuation_({60.f, 60.f, 60.f, 80.f}),
-    prefilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
+    prefilter_(FilterLengthInSamples(filter_lengths_.at(filter_quality),
+                                     samplerate),
                freq_prefilter / samplerate,
-               filter_attenuation_.at(quality)),
-    postfilter_(FilterLengthInSamples(filter_lengths_.at(quality), samplerate),
+               filter_attenuation_.at(filter_quality)),
+    postfilter_(FilterLengthInSamples(filter_lengths_.at(filter_quality),
+                                      samplerate),
                 freq_postfilter / samplerate,
-                filter_attenuation_.at(quality)),
+                filter_attenuation_.at(filter_quality)),
     oscillator_(LIQUID_VCO, freq_shift * 2.0f * M_PI / samplerate),
-    do_filter_(quality > 0)
+    do_filter_(filter_quality > 0)
 #else
     oscillator_(freq_shift * 2.0f * M_PI / samplerate),
     do_filter_(false)
@@ -421,7 +424,6 @@ void SplitBandDescramble(deinvert::Options options,
 
   while (!reader->eof()) {
     for (float insample : reader->ReadBlock()) {
-
       dcremover.push(insample);
       float dcremoved = dcremover.execute(insample);
 
@@ -450,7 +452,7 @@ int main(int argc, char** argv) {
   deinvert::AudioReader* reader;
   deinvert::AudioWriter* writer;
 
-  if (options.input_type == deinvert::INPUT_SNDFILE) {
+  if (options.input_type == deinvert::InputType::sndfile) {
 #ifdef HAVE_SNDFILE
     try {
       reader = new deinvert::SndfileReader(options);
@@ -464,7 +466,7 @@ int main(int argc, char** argv) {
     reader = new deinvert::StdinReader(options);
   }
 
-  if (options.output_type == deinvert::OUTPUT_WAVFILE) {
+  if (options.output_type == deinvert::OutputType::wavfile) {
 #ifdef HAVE_SNDFILE
     try {
       writer = new deinvert::SndfileWriter(options.outfilename,

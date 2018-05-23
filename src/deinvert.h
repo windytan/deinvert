@@ -35,12 +35,12 @@ namespace deinvert {
 
 const int   kIOBufferSize         = 4096;
 
-enum eInputType {
-  INPUT_STDIN, INPUT_SNDFILE
+enum class InputType {
+  stdin, sndfile
 };
 
-enum eOutputType {
-  OUTPUT_RAW_STDOUT, OUTPUT_WAVFILE
+enum class OutputType {
+  raw_stdout, wavfile
 };
 
 struct Options {
@@ -48,8 +48,8 @@ struct Options {
               is_split_band(false),
               quality(2),
               samplerate(44100),
-              input_type(INPUT_STDIN),
-              output_type(OUTPUT_RAW_STDOUT) {}
+              input_type(InputType::stdin),
+              output_type(OutputType::raw_stdout) {}
   bool just_exit;
   bool is_split_band;
   int quality;
@@ -57,8 +57,8 @@ struct Options {
   float frequency_lo;
   float frequency_hi;
   float split_frequency;
-  eInputType input_type;
-  eOutputType output_type;
+  InputType input_type;
+  OutputType output_type;
   std::string infilename;
   std::string outfilename;
 };
