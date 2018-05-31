@@ -1,6 +1,6 @@
 # deinvert changelog
 
-## 0.3
+## 0.3 (2018-05-31)
 
 * Reduce artifacts from DC removal filter at startup
 * Warn when falling back to defaults
