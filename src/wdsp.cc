@@ -18,6 +18,7 @@
 #include "wdsp.h"
 
 #include <complex>
+#include <numeric>
 
 namespace wdsp {
 
@@ -51,9 +52,7 @@ float DCRemover::execute(float sample) {
   if (buffer_.size() == 0) {
     return sample;
   } else {
-    float sum = 0;
-    for (float s : buffer_)
-      sum += s;
+    float sum = std::accumulate(buffer_.begin(), buffer_.end(), 0.0f);
 
     if (is_filled_)
       sum /= buffer_.size();

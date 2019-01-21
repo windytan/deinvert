@@ -20,6 +20,7 @@
 #include <getopt.h>
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "config.h"
@@ -373,8 +374,8 @@ float Inverter::execute(float insample) {
 }  // namespace deinvert
 
 void SimpleDescramble(deinvert::Options options,
-                      deinvert::AudioReader* reader,
-                      deinvert::AudioWriter* writer) {
+                      std::unique_ptr<deinvert::AudioReader>& reader,
+                      std::unique_ptr<deinvert::AudioWriter>& writer) {
   static const std::vector<float> filter_gain_compensation({
       1.0f, 1.4f, 1.8f, 1.8f
   });
@@ -402,8 +403,8 @@ void SimpleDescramble(deinvert::Options options,
 }
 
 void SplitBandDescramble(deinvert::Options options,
-                         deinvert::AudioReader* reader,
-                         deinvert::AudioWriter* writer) {
+                         std::unique_ptr<deinvert::AudioReader>& reader,
+                         std::unique_ptr<deinvert::AudioWriter>& writer) {
   static const std::vector<float> filter_gain_compensation({
       0.5f, 1.4f, 1.8f, 1.8f
       });
@@ -449,13 +450,14 @@ int main(int argc, char** argv) {
   if (options.just_exit)
     return EXIT_FAILURE;
 
-  deinvert::AudioReader* reader;
-  deinvert::AudioWriter* writer;
+  std::unique_ptr<deinvert::AudioReader> reader;
+  std::unique_ptr<deinvert::AudioWriter> writer;
 
   if (options.input_type == deinvert::InputType::sndfile) {
 #ifdef HAVE_SNDFILE
     try {
-      reader = new deinvert::SndfileReader(options);
+      reader = std::unique_ptr<deinvert::AudioReader>(
+          new deinvert::SndfileReader(options));
     } catch (std::exception& e) {
       std::cerr << e.what() << std::endl;
       return EXIT_FAILURE;
@@ -463,21 +465,24 @@ int main(int argc, char** argv) {
     options.samplerate = reader->samplerate();
 #endif
   } else {
-    reader = new deinvert::StdinReader(options);
+    reader = std::unique_ptr<deinvert::AudioReader>(
+        new deinvert::StdinReader(options));
   }
 
   if (options.output_type == deinvert::OutputType::wavfile) {
 #ifdef HAVE_SNDFILE
     try {
-      writer = new deinvert::SndfileWriter(options.outfilename,
-                                           options.samplerate);
+      writer = std::unique_ptr<deinvert::AudioWriter>(
+          new deinvert::SndfileWriter(options.outfilename,
+                                      options.samplerate));
     } catch (std::exception& e) {
       std::cerr << e.what() << std::endl;
       return EXIT_FAILURE;
     }
   } else {
 #endif
-    writer = new deinvert::RawPCMWriter();
+    writer = std::unique_ptr<deinvert::AudioWriter>(
+        new deinvert::RawPCMWriter());
   }
 
   if (options.is_split_band) {
@@ -485,7 +490,4 @@ int main(int argc, char** argv) {
   } else {
     SimpleDescramble(options, reader, writer);
   }
-
-  delete reader;
-  delete writer;
 }
