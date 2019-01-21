@@ -21,24 +21,43 @@ support will be disabled, only raw input/output will work.
 
 ## Usage
 
-Descrambling a WAV file scrambled with setting 4:
-
-    ./src/deinvert -i input.wav -o output.wav -p 4
-
-Descrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
-
-    ./src/deinvert -i input.wav -o output.wav -f 3500 -s 1200
-
-Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
-
-    rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./src/deinvert -r 12000 -p 4
-
 Note that since scrambling and descrambling are the same operation this
 tool also works as a scrambler.
 
 If no input and output file is given, deinvert reads raw 16-bit PCM via stdin
 and outputs in the same format via stdout. The inversion carrier defaults to
 2632 Hz.
+
+### Simple inversion, WAV input
+
+(De)scrambling a WAV file with setting 4:
+
+    ./src/deinvert -i input.wav -o output.wav -p 4
+
+### Split-band inversion
+
+(De)scrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
+
+    ./src/deinvert -i input.wav -o output.wav -f 3500 -s 1200
+
+### Invert a live signal from RTL-SDR
+
+Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
+
+    rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./src/deinvert -r 12000 -p 4 |\
+      play -r 12000 -c 1 -t .s16 -
+
+### Invert a live signal from Gqrx (requires netcat)
+
+1. Set Gqrx to demodulate the audio (for example, narrow FM).
+2. Go to the Audio window and click on the three dots button "...".
+3. Go to Network and set host to localhost and port to e.g. 12345.
+4. In the Audio window, enable UDP.
+5. Run this command in a terminal window:
+   `nc -u -l localhost 12345 | ./src/deinvert -r 48000`
+
+
+### Full options
 
     ./src/deinvert [OPTIONS]
 
@@ -93,6 +112,16 @@ XCode command line tools aren't installed. Run this command to fix it:
 Try running this in the terminal:
 
     sudo ldconfig
+
+### I hear a high-pitched beep in the result
+
+This could be because the transmission has a CTCSS subtone.
+It can be fixed by running a low-pass filter after deinvert. The cut-off
+frequency should be around 250 Hz less than the inversion carrier frequency. For
+example, if the inversion carrier is 3023 Hz, the `play` command could be
+changed to:
+
+    play -r 12000 -c 1 -t .s16 - sinc -2800
 
 ## Licensing
 
