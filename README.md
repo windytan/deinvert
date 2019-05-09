@@ -1,13 +1,22 @@
 # deinvert
 
-deinvert is a scrambler-descrambler for voice inversion scrambling. It supports
-simple inversion as well as split-band inversion.
+deinvert is a voice inversion scrambler and descrambler. It supports simple
+inversion as well as split-band inversion.
 
 ## Prerequisites
 By default, deinvert requires
-[liquid-dsp](https://github.com/jgaeddert/liquid-dsp) and libsndfile.
+[liquid-dsp](https://github.com/jgaeddert/liquid-dsp), libsndfile, and GNU
+autotools. On Ubuntu, these can be installed like so:
 
-But it can be compiled without liquid-dsp using the configure
+    sudo apt install libsndfile1-dev libliquid-dev automake
+    sudo ldconfig
+
+On macOS I recommend using [homebrew](https://brew.sh/):
+
+    xcode-select --install
+    brew install libsndfile liquid-dsp automake
+
+But deinvert can be compiled without liquid-dsp using the configure
 option `--without-liquid`; filtering will be disabled and the result will not
 sound as good. It can also be compiled
 without libsndfile using the configure option `--without-sndfile`; WAV
@@ -45,7 +54,7 @@ and outputs in the same format via stdout. The inversion carrier defaults to
 Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 
     rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./src/deinvert -r 12000 -p 4 |\
-      play -r 12000 -c 1 -t .s16 -
+      play -r 12k -c 1 -t .s16 -
 
 ### Invert a live signal from Gqrx (requires netcat)
 
@@ -54,7 +63,8 @@ Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 3. Go to Network and set host to localhost and port to e.g. 12345.
 4. In the Audio window, enable UDP.
 5. Run this command in a terminal window:
-   `nc -u -l localhost 12345 | ./src/deinvert -r 48000`
+
+    nc -u -l localhost 12345 | ./src/deinvert -r 48000 | play -r 48k -c 1 -t .s16 -
 
 
 ### Full options
