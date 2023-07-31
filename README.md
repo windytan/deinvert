@@ -3,7 +3,11 @@
 deinvert is a voice inversion scrambler and descrambler. It supports simple
 inversion as well as split-band inversion.
 
+See the [wiki](https://github.com/windytan/deinvert/wiki) for detailed usage
+instructions and examples.
+
 ## Prerequisites
+
 By default, deinvert requires liquid-dsp, libsndfile, and GNU autotools. On
 Ubuntu, these can be installed like so:
 
