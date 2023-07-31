@@ -83,7 +83,7 @@ class StdinReader : public AudioReader {
 
  private:
   float samplerate_;
-  std::array<int16_t, kIOBufferSize> buffer_;
+  std::array<int16_t, kIOBufferSize> buffer_{};
 };
 
 #ifdef HAVE_SNDFILE
@@ -97,7 +97,7 @@ class SndfileReader : public AudioReader {
  private:
   SF_INFO info_;
   SNDFILE* file_;
-  std::array<float, kIOBufferSize> buffer_;
+  std::array<float, kIOBufferSize> buffer_{};
 };
 #endif
 
@@ -113,7 +113,7 @@ class RawPCMWriter : public AudioWriter {
   bool push(float sample) override;
 
  private:
-  std::array<int16_t, kIOBufferSize> buffer_;
+  std::array<int16_t, kIOBufferSize> buffer_{};
   size_t buffer_pos_;
 };
 
@@ -128,7 +128,7 @@ class SndfileWriter : public AudioWriter {
   bool write();
   SF_INFO info_;
   SNDFILE* file_;
-  std::array<float, kIOBufferSize> buffer_;
+  std::array<float, kIOBufferSize> buffer_{};
   size_t buffer_pos_;
 };
 #endif
