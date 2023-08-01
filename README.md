@@ -3,6 +3,9 @@
 deinvert is a voice inversion scrambler and descrambler. It supports simple
 inversion as well as split-band inversion.
 
+NOTE: Frequency inversion is NOT encryption! It's very easy to decode. This
+program is a toy and should never be used for security purposes.
+
 See the [wiki](https://github.com/windytan/deinvert/wiki) for detailed usage
 instructions and examples.
 
