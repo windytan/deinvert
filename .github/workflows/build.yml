@@ -1,0 +1,78 @@
+name: build
+
+on:
+  push:
+    branches: [ master, dev ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-ubuntu-22-04:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies (apt)
+      run: sudo apt install python3-pip ninja-build libsndfile1-dev libliquid-dev
+    - name: Install meson (pip3)
+      run: pip3 install --user meson
+    - name: meson setup
+      run: meson setup -Dwerror=true build
+    - name: meson compile
+      run: cd build && meson compile
+
+  build-ubuntu-20-04:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies (apt)
+      run: sudo apt install python3-pip ninja-build libsndfile1-dev libliquid-dev
+    - name: Install meson (pip3)
+      run: pip3 install --user meson
+    - name: meson setup
+      run: meson setup -Dwerror=true build
+    - name: meson compile
+      run: cd build && meson compile
+
+  build-debian-oldoldstable:
+    runs-on: ubuntu-latest
+    container: debian:buster
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies (apt-get)
+      run: apt-get update && apt-get -y install python3-pip ninja-build build-essential libsndfile1-dev libliquid-dev
+    - name: Install meson (pip3)
+      run: pip3 install --user meson
+    - name: meson setup
+      run: export PATH=$PATH:$HOME/.local/bin && meson setup -Dwerror=true build
+    - name: meson compile
+      run: export PATH=$PATH:$HOME/.local/bin && cd build && meson compile
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies (brew)
+      run: brew install meson libsndfile liquid-dsp
+    - name: meson setup
+      run: meson setup -Dwerror=true build
+    - name: meson compile
+      run: cd build && meson compile
+
+  test:
+      runs-on: ubuntu-22.04
+
+      steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies (apt)
+        run: sudo apt install meson libsndfile1-dev libliquid-dev perl sox
+      - name: meson setup
+        run: meson setup -Dwerror=true build
+      - name: meson compile
+        run: cd build && meson compile
+      - name: test
+        run: cd test && perl test.pl

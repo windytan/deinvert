@@ -17,12 +17,18 @@
 #include "src/liquid_wrappers.h"
 
 #include "config.h"
-#ifdef HAVE_LIQUID
 
 #include <cassert>
 #include <complex>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// https://github.com/jgaeddert/liquid-dsp/issues/229
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+extern "C" {
 #include "liquid/liquid.h"
+}
+#pragma clang diagnostic pop
 
 namespace liquid {
 
@@ -49,8 +55,7 @@ float FIRFilter::execute() {
   return result;
 }
 
-NCO::NCO(liquid_ncotype type, float freq) :
-    object_(nco_crcf_create(type)) {
+NCO::NCO(liquid_ncotype type, float freq) : object_(nco_crcf_create(type)) {
   nco_crcf_set_frequency(object_, freq);
 }
 
@@ -68,10 +73,4 @@ void NCO::Step() {
   nco_crcf_step(object_);
 }
 
-float NCO::frequency() {
-  return nco_crcf_get_frequency(object_);
-}
-
 }  // namespace liquid
-
-#endif

@@ -11,28 +11,28 @@ instructions and examples.
 
 ## Prerequisites
 
-By default, deinvert requires liquid-dsp, libsndfile, and GNU autotools. On
-Ubuntu, these can be installed like so:
+deinvert requires liquid-dsp, libsndfile, and meson.
 
-    sudo apt install libsndfile1-dev libliquid-dev automake
+On Ubuntu, these can be installed like so:
+
+    sudo apt install libsndfile1-dev libliquid-dev meson
+
+On older Debians:
+
+    sudo apt-get install python3-pip ninja-build build-essential libsndfile1-dev libliquid-dev
+    pip3 install --user meson
     sudo ldconfig
 
 On macOS I recommend using [homebrew](https://brew.sh/):
 
     xcode-select --install
-    brew install libsndfile liquid-dsp automake
-
-But deinvert can be compiled without liquid-dsp using the configure
-option `--without-liquid`; filtering will be disabled and the result will not
-sound as good. It can also be compiled
-without libsndfile using the configure option `--without-sndfile`; WAV
-support will be disabled, only raw input/output will work.
+    brew install libsndfile liquid-dsp meson
 
 ## Compiling
 
-    ./autogen.sh
-    ./configure [--without-liquid] [--without-sndfile]
-    make
+    meson setup build
+    cd build
+    meson compile
 
 ## Usage
 
@@ -47,19 +47,19 @@ and outputs in the same format via stdout. The inversion carrier defaults to
 
 (De)scrambling a WAV file with setting 4:
 
-    ./src/deinvert -i input.wav -o output.wav -p 4
+    ./build/deinvert -i input.wav -o output.wav -p 4
 
 ### Split-band inversion
 
 (De)scrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
 
-    ./src/deinvert -i input.wav -o output.wav -f 3500 -s 1200
+    ./build/deinvert -i input.wav -o output.wav -f 3500 -s 1200
 
 ### Invert a live signal from RTL-SDR
 
 Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 
-    rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./src/deinvert -r 12000 -p 4 |\
+    rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./build/deinvert -r 12000 -p 4 |\
       play -r 12k -c 1 -t .s16 -
 
 ### Invert a live signal from Gqrx (requires netcat)
@@ -70,12 +70,12 @@ Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 4. In the Audio window, enable UDP.
 5. Run this command in a terminal window:
 
-    nc -u -l localhost 12345 | ./src/deinvert -r 48000 | play -r 48k -c 1 -t .s16 -
+    nc -u -l localhost 12345 | ./build/deinvert -r 48000 | play -r 48k -c 1 -t .s16 -
 
 
 ### Full options
 
-    ./src/deinvert [OPTIONS]
+    ./build/deinvert [OPTIONS]
 
     -f, --frequency FREQ   Frequency of the inversion carrier, in Hertz.
 
@@ -86,6 +86,7 @@ Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 
     -o, --output-file FILE Write output to a WAV file instead of stdout. An
                            existing file will be overwritten.
+                           The input sample rate will be used.
 
     -p, --preset NUM       Scrambler frequency preset (1-8), referring to
                            the set of common carrier frequencies used by
@@ -116,18 +117,11 @@ Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 
 ## Troubleshooting
 
-### Can't find liquid-dsp on macOS
+### I can't understand the speech even after deinverting
 
-If you've installed liquid-dsp yet `configure` can't find it, it's possible that
-XCode command line tools aren't installed. Run this command to fix it:
-
-    xcode-select --install
-
-### Can't find liquid-dsp on Linux
-
-Try running this in the terminal:
-
-    sudo ldconfig
+In this case, the sample is probably not frequency inversion scrambled.
+It's very rare to encounter frequency inversion scrambling nowadays. See the
+[wiki](https://github.com/windytan/deinvert/wiki) for details.
 
 ### I hear a high-pitched beep in the result
 

@@ -14,15 +14,20 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
-#ifndef LIQUID_WRAPPERS_H_
-#define LIQUID_WRAPPERS_H_
+#pragma once
 
 #include "config.h"
-#ifdef HAVE_LIQUID
 
 #include <complex>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// https://github.com/jgaeddert/liquid-dsp/issues/229
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+extern "C" {
 #include "liquid/liquid.h"
+}
+#pragma clang diagnostic pop
 
 namespace liquid {
 
@@ -30,7 +35,7 @@ class FIRFilter {
  public:
   FIRFilter(int len, float fc, float As = 80.0f, float mu = 0.0f);
   ~FIRFilter();
-  void push(float s);
+  void  push(float s);
   float execute();
 
  private:
@@ -42,15 +47,10 @@ class NCO {
   explicit NCO(liquid_ncotype type, float freq);
   ~NCO();
   std::complex<float> MixUp(std::complex<float> s);
-  void Step();
-  float frequency();
+  void                Step();
 
  private:
   nco_crcf object_;
 };
 
 }  // namespace liquid
-
-#endif  // HAVE_LIQUID
-
-#endif  // LIQUID_WRAPPERS_H_
