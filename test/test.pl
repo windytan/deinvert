@@ -28,15 +28,16 @@ sub main {
 }
 
 sub testSimpleInversion {
-  for my $test_frequency ( 500, 600, 700 ) {
-    checkThatFrequencyInvertsAsItShould($test_frequency);
+  for my $inversion_carrier (2632, 3729) {
+    for my $test_frequency ( 500, 600, 700 ) {
+      checkThatFrequencyInvertsAsItShould($test_frequency, $inversion_carrier);
+    }
   }
   return;
 }
 
 sub checkThatFrequencyInvertsAsItShould {
-  my ($test_frequency) = @_;
-  my $inversion_carrier = 2632;
+  my ($test_frequency, $inversion_carrier) = @_;
   generateTestSoundWithSimpleBeep($test_frequency);
   deinvertTestFileWithOptions( "-f " . $inversion_carrier );
   my $measured_frequency = findFrequencyOfOutputFile();
