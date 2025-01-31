@@ -58,6 +58,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install dependencies (brew)
       run: brew install meson libsndfile liquid-dsp
+    - name: Setup pkg-config path
+      run: echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
     - name: meson setup
       run: meson setup -Dwerror=true build
     - name: meson compile
