@@ -38,17 +38,8 @@ sndfile = dependency('sndfile')
 
 # Find liquid-dsp
 if build_machine.system() == 'darwin'
-  fs = import('fs')
-  # Homebrew system
-  if fs.is_dir('/opt/homebrew/lib')
-    liquid_lib = cc.find_library('liquid', dirs: ['/opt/homebrew/lib'])
-    liquid_inc = include_directories('/opt/homebrew/include')
-    # MacPorts system
-  else
-    liquid_lib = cc.find_library('liquid', dirs: ['/opt/local/lib'])
-    liquid_inc = include_directories('/opt/local/include')
-  endif
-  liquid = declare_dependency(dependencies: liquid_lib, include_directories: liquid_inc)
+  # Use pkg-config for liquid-dsp on macOS
+  liquid = dependency('liquid', required: true)
 else
   liquid = cc.find_library('liquid')
 endif
