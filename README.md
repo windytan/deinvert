@@ -34,6 +34,10 @@ On macOS I recommend using [homebrew](https://brew.sh/):
     cd build
     meson compile
 
+If you wish to install it system-wide (/usr/local by default):
+
+    meson install
+
 ## Usage
 
 Note that since scrambling and descrambling are the same operation this
