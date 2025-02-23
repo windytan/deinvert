@@ -1,7 +1,13 @@
 project(
   'deinvert',
   'cpp',
-  default_options: ['warning_level=3', 'buildtype=release', 'optimization=3'],
+  default_options: [
+    'warning_level=3',
+    'buildtype=release',
+    'optimization=3',
+    'prefix=/usr/local',
+    'cpp_std=c++14',
+  ],
   version: '1.0',
 )
 
@@ -24,9 +30,9 @@ endif
 
 # Explicit GNU extensions on Cygwin
 if build_machine.system() == 'cygwin'
-  add_project_arguments('-std=gnu++14', language: 'cpp')
+  override_options = ['cpp_std=gnu++14']
 else
-  add_project_arguments('-std=c++14', language: 'cpp')
+  override_options = []
 endif
 
 ####################
@@ -37,20 +43,23 @@ endif
 sndfile = dependency('sndfile')
 
 # Find liquid-dsp
-if build_machine.system() == 'darwin'
+liquid = cc.find_library('liquid', required: false)
+# macOS: The above mechanism sometimes fails, so let's look deeper
+if not liquid.found() and build_machine.system() == 'darwin'
   fs = import('fs')
-  # Homebrew system
-  if fs.is_dir('/opt/homebrew/lib')
-    liquid_lib = cc.find_library('liquid', dirs: ['/opt/homebrew/lib'])
-    liquid_inc = include_directories('/opt/homebrew/include')
+  brew = find_program('brew', required: false)
+  if brew.found()
+    # Homebrew system
+    liquid_prefix = run_command(brew, '--prefix', 'liquid-dsp', check: true).stdout().strip()
+    liquid_lib = cc.find_library('liquid', dirs: [liquid_prefix + '/lib'])
+    liquid_inc = include_directories(liquid_prefix + '/include')
+    liquid = declare_dependency(dependencies: liquid_lib, include_directories: liquid_inc)
+  elif fs.is_dir('/opt/local/lib')
     # MacPorts system
-  else
     liquid_lib = cc.find_library('liquid', dirs: ['/opt/local/lib'])
     liquid_inc = include_directories('/opt/local/include')
+    liquid = declare_dependency(dependencies: liquid_lib, include_directories: liquid_inc)
   endif
-  liquid = declare_dependency(dependencies: liquid_lib, include_directories: liquid_inc)
-else
-  liquid = cc.find_library('liquid')
 endif
 
 ############################
@@ -62,4 +71,10 @@ sources = [
   'src/liquid_wrappers.cc',
 ]
 
-executable('deinvert', sources, dependencies: [liquid, sndfile], install: true)
+executable(
+  'deinvert',
+  sources,
+  dependencies: [liquid, sndfile],
+  install: true,
+  override_options: override_options,
+)

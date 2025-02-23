@@ -50,6 +50,8 @@ void FIRFilter::push(float s) {
 }
 
 float FIRFilter::execute() {
+  // Set by liquid-dsp, no need to initialize
+  // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
   float result;
   firfilt_rrrf_execute(object_, &result);
   return result;

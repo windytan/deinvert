@@ -14,27 +14,20 @@ enum class InputType { stdin, sndfile };
 enum class OutputType { raw_stdout, wavfile };
 
 struct Options {
-  Options()
-      : just_exit(false),
-        is_split_band(false),
-        quality(2),
-        samplerate(44100),
-        input_type(InputType::stdin),
-        output_type(OutputType::raw_stdout) {}
-  bool        just_exit;
-  bool        is_split_band;
-  int         quality;
-  float       samplerate;
-  float       frequency_lo;
-  float       frequency_hi;
-  float       split_frequency;
-  InputType   input_type;
-  OutputType  output_type;
+  bool        just_exit{};
+  bool        is_split_band{};
+  int         quality{2};
+  float       samplerate{44100};
+  float       frequency_lo{};
+  float       frequency_hi{};
+  float       split_frequency{};
+  InputType   input_type{InputType::stdin};
+  OutputType  output_type{OutputType::raw_stdout};
   std::string infilename;
   std::string outfilename;
 };
 
-void PrintUsage() {
+inline void PrintUsage() {
   std::cout << "deinvert [OPTIONS]\n"
                "\n"
                "-f, --frequency FREQ   Frequency of the inversion carrier, in "
@@ -67,26 +60,28 @@ void PrintUsage() {
                "-v, --version          Display version string.\n";
 }
 
-void PrintVersion() {
+inline void PrintVersion() {
   std::cout << "deinvert " << VERSION << " by OH2EIQ" << std::endl;
 }
 
-Options GetOptions(int argc, char **argv) {
+inline Options GetOptions(int argc, char **argv) {
   Options options;
 
-  const struct option long_options[] = {
-      {"frequency",       no_argument, 0, 'f'},
-      {"preset",          1,           0, 'p'},
-      {"input-file",      1,           0, 'i'},
-      {"help",            no_argument, 0, 'h'},
-      {"nofilter",        no_argument, 0, 'n'},
-      {"output-file",     1,           0, 'o'},
-      {"quality",         1,           0, 'q'},
-      {"samplerate",      1,           0, 'r'},
-      {"split-frequency", 1,           0, 's'},
-      {"version",         no_argument, 0, 'v'},
-      {0,                 0,           0, 0  }
-  };
+  // clang-format off
+  const std::array<struct option, 11> long_options{{
+      {"frequency",       no_argument,       nullptr, 'f'},
+      {"preset",          required_argument, nullptr, 'p'},
+      {"input-file",      required_argument, nullptr, 'i'},
+      {"help",            no_argument,       nullptr, 'h'},
+      {"nofilter",        no_argument,       nullptr, 'n'},
+      {"output-file",     required_argument, nullptr, 'o'},
+      {"quality",         required_argument, nullptr, 'q'},
+      {"samplerate",      required_argument, nullptr, 'r'},
+      {"split-frequency", required_argument, nullptr, 's'},
+      {"version",         no_argument,       nullptr, 'v'},
+      {0,                 0,                 nullptr, 0  }
+  }};
+  // clang-format on
 
   constexpr std::array<float, 8> selectone_carriers(
       {2632.f, 2718.f, 2868.f, 3023.f, 3196.f, 3339.f, 3495.f, 3729.f});
@@ -95,15 +90,15 @@ Options GetOptions(int argc, char **argv) {
 
   options.quality = 2;
 
-  int  option_index = 0;
-  int  option_char;
-  int  selectone_num;
+  int  option_index{};
+  int  option_char{};
+  int  selectone_num{};
   bool samplerate_set        = false;
   bool carrier_frequency_set = false;
   bool carrier_preset_set    = false;
 
-  while ((option_char =
-              getopt_long(argc, argv, "f:hi:no:p:q:r:s:v", long_options, &option_index)) >= 0) {
+  while ((option_char = getopt_long(argc, argv, "f:hi:no:p:q:r:s:v", long_options.data(),
+                                    &option_index)) >= 0) {
     switch (option_char) {
       case 'i':
         options.infilename = std::string(optarg);
@@ -127,12 +122,12 @@ Options GetOptions(int argc, char **argv) {
           throw std::runtime_error("preset should be a number from 1 to 8");
         break;
       case 'q':
-        options.quality = std::atoi(optarg);
+        options.quality = static_cast<int>(std::strtol(optarg, nullptr, 10));
         if (options.quality < 0 || options.quality > 3)
           throw std::runtime_error("please specify filter quality from 0 to 3");
         break;
       case 'r':
-        options.samplerate = std::atoi(optarg);
+        options.samplerate = static_cast<float>(std::atoi(optarg));
         samplerate_set     = true;
         break;
       case 's':

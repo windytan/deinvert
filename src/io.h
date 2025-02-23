@@ -21,14 +21,12 @@ class AudioReader {
   virtual float              samplerate() const = 0;
 
  protected:
-  bool is_eof_;
+  bool is_eof_{};
 };
 
 class StdinReader : public AudioReader {
  public:
-  explicit StdinReader(const Options &options) : samplerate_(options.samplerate) {
-    is_eof_ = false;
-  }
+  explicit StdinReader(const Options &options) : samplerate_(options.samplerate) {}
   ~StdinReader() override = default;
   std::vector<float> ReadBlock() override {
     const int num_read = fread(buffer_.data(), sizeof(buffer_[0]), kIOBufferSize, stdin);
@@ -54,7 +52,6 @@ class SndfileReader : public AudioReader {
  public:
   explicit SndfileReader(const Options &options)
       : info_({0, 0, 0, 0, 0, 0}), file_(sf_open(options.infilename.c_str(), SFM_READ, &info_)) {
-    is_eof_ = false;
     if (file_ == nullptr) {
       throw std::runtime_error(options.infilename + ": " + sf_strerror(nullptr));
     } else if (info_.samplerate < options.frequency_hi * 2.0f) {

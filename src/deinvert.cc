@@ -64,9 +64,9 @@ float DCRemover::execute(float sample) const {
     float sum = std::accumulate(buffer_.begin(), buffer_.end(), 0.0f);
 
     if (is_filled_)
-      sum /= buffer_.size();
+      sum /= static_cast<float>(buffer_.size());
     else
-      sum /= (index_ == 0 ? 1 : index_);
+      sum /= static_cast<float>(index_ == 0 ? 1 : index_);
 
     return sample - sum;
   }
@@ -80,13 +80,13 @@ Inverter::Inverter(float freq_prefilter, float freq_shift, float freq_postfilter
                  freq_prefilter / samplerate, filter_attenuation_.at(filter_quality)),
       postfilter_(FilterLengthInSamples(filter_lengths_.at(filter_quality), samplerate),
                   freq_postfilter / samplerate, filter_attenuation_.at(filter_quality)),
-      oscillator_(LIQUID_VCO, freq_shift * 2.0f * M_PI / samplerate),
+      oscillator_(LIQUID_VCO, freq_shift * 2.0f * static_cast<float>(M_PI) / samplerate),
       do_filter_(filter_quality > 0) {}
 
 float Inverter::execute(float insample) {
   oscillator_.Step();
 
-  float result;
+  float result{};
 
   if (do_filter_) {
     prefilter_.push(insample);
@@ -101,12 +101,14 @@ float Inverter::execute(float insample) {
 
 }  // namespace deinvert
 
-void SimpleDescramble(deinvert::Options options, std::unique_ptr<deinvert::AudioReader> &reader,
+void SimpleDescramble(const deinvert::Options                &options,
+                      std::unique_ptr<deinvert::AudioReader> &reader,
                       std::unique_ptr<deinvert::AudioWriter> &writer) {
   static const std::vector<float> filter_gain_compensation({1.0f, 1.4f, 1.8f, 1.8f});
   float                           gain = filter_gain_compensation.at(options.quality);
 
-  const int dc_remover_length = (options.quality * options.samplerate * 0.002f);
+  const int dc_remover_length =
+      static_cast<int>(static_cast<float>(options.quality) * options.samplerate * 0.002f);
 
   deinvert::DCRemover dcremover(dc_remover_length);
 
@@ -114,7 +116,7 @@ void SimpleDescramble(deinvert::Options options, std::unique_ptr<deinvert::Audio
                               options.samplerate, options.quality);
 
   while (!reader->eof()) {
-    for (float insample : reader->ReadBlock()) {
+    for (const float insample : reader->ReadBlock()) {
       dcremover.push(insample);
       const bool can_still_write =
           writer->push(gain * inverter.execute(dcremover.execute(insample)));
@@ -124,12 +126,14 @@ void SimpleDescramble(deinvert::Options options, std::unique_ptr<deinvert::Audio
   }
 }
 
-void SplitBandDescramble(deinvert::Options options, std::unique_ptr<deinvert::AudioReader> &reader,
+void SplitBandDescramble(const deinvert::Options                &options,
+                         std::unique_ptr<deinvert::AudioReader> &reader,
                          std::unique_ptr<deinvert::AudioWriter> &writer) {
-  static const std::vector<float> filter_gain_compensation({0.5f, 1.4f, 1.8f, 1.8f});
-  const float                     gain = filter_gain_compensation.at(options.quality);
+  const std::array<float, 4> filter_gain_compensation{0.5f, 1.4f, 1.8f, 1.8f};
+  const float                gain = filter_gain_compensation.at(options.quality);
 
-  const int dc_remover_length = (options.quality * options.samplerate * 0.002f);
+  const int dc_remover_length =
+      static_cast<int>(static_cast<float>(options.quality) * options.samplerate * 0.002f);
 
   deinvert::DCRemover dcremover(dc_remover_length);
 
@@ -182,7 +186,7 @@ int main(int argc, char **argv) {
   if (options.output_type == deinvert::OutputType::wavfile) {
     try {
       writer = std::unique_ptr<deinvert::AudioWriter>(
-          new deinvert::SndfileWriter(options.outfilename, options.samplerate));
+          new deinvert::SndfileWriter(options.outfilename, static_cast<int>(options.samplerate)));
     } catch (std::exception &e) {
       std::cerr << e.what() << std::endl;
       return EXIT_FAILURE;
