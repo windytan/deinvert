@@ -16,8 +16,6 @@
  */
 #pragma once
 
-#include "config.h"
-
 #include <complex>
 
 #pragma clang diagnostic push

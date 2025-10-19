@@ -16,8 +16,6 @@
  */
 #include "src/liquid_wrappers.h"
 
-#include "config.h"
-
 #include <cassert>
 #include <complex>
 
