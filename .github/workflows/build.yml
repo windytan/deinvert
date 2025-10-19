@@ -8,7 +8,21 @@ on:
     branches: [ master ]
 
 jobs:
+  build-ubuntu-24-04:
+    name: "Build on Ubuntu 24.04"
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies (apt)
+      run: sudo apt install meson libsndfile1-dev libliquid-dev
+    - name: meson setup
+      run: meson setup -Dwerror=true build
+    - name: meson compile
+      run: cd build && meson compile
+
   build-ubuntu-22-04:
+    name: "Build on Ubuntu 22.04"
     runs-on: ubuntu-22.04
 
     steps:
@@ -22,23 +36,10 @@ jobs:
     - name: meson compile
       run: cd build && meson compile
 
-  build-ubuntu-20-04:
-    runs-on: ubuntu-20.04
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Install dependencies (apt)
-      run: sudo apt install python3-pip ninja-build libsndfile1-dev libliquid-dev
-    - name: Install meson (pip3)
-      run: pip3 install --user meson
-    - name: meson setup
-      run: meson setup -Dwerror=true build
-    - name: meson compile
-      run: cd build && meson compile
-
   build-debian-oldoldstable:
+    name: "Build on Debian 11 (Bullseye)"
     runs-on: ubuntu-latest
-    container: debian:buster
+    container: debian:bullseye
 
     steps:
     - uses: actions/checkout@v4
@@ -52,6 +53,7 @@ jobs:
       run: export PATH=$PATH:$HOME/.local/bin && cd build && meson compile
 
   build-macos:
+    name: "Build on macOS"
     runs-on: macos-latest
 
     steps:
@@ -64,6 +66,7 @@ jobs:
       run: cd build && meson compile
 
   test:
+      name: "Build and test on Ubuntu 22.04"
       runs-on: ubuntu-22.04
 
       steps:

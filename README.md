@@ -15,71 +15,100 @@ deinvert requires liquid-dsp, libsndfile, and meson.
 
 On Ubuntu, these can be installed like so:
 
-    sudo apt install libsndfile1-dev libliquid-dev meson
+```bash
+sudo apt install libsndfile1-dev libliquid-dev meson
+```
 
 On older Debians:
 
-    sudo apt-get install python3-pip ninja-build build-essential libsndfile1-dev libliquid-dev
-    pip3 install --user meson
-    sudo ldconfig
+```bash
+sudo apt-get install python3-pip ninja-build build-essential libsndfile1-dev libliquid-dev
+pip3 install --user meson
+sudo ldconfig
+```
 
-On macOS I recommend using [homebrew](https://brew.sh/):
+On macOS we recommend using [homebrew](https://brew.sh/):
 
-    xcode-select --install
-    brew install libsndfile liquid-dsp meson
+```bash
+xcode-select --install
+brew install libsndfile liquid-dsp meson
+```
 
 ## Compiling
 
-    meson setup build
-    cd build
-    meson compile
+```bash
+meson setup build
+cd build
+meson compile
+```
 
-If you wish to install it system-wide (/usr/local by default):
+If you wish to install it system-wide (`/usr/local` by default):
 
-    meson install
+```bash
+meson install
+```
+
+If you don't install it, the binary will be available in the `build`
+directory.
 
 ## Usage
 
-Note that since scrambling and descrambling are the same operation this
-tool also works as a scrambler.
-
-If no input and output file is given, deinvert reads raw 16-bit PCM via stdin
-and outputs in the same format via stdout. The inversion carrier defaults to
-2632 Hz.
+* If no filename is given as input or output, deinvert will use the standard
+  streams for raw PCM (16-bit signed-integer mono sound).
+* The inversion carrier defaults to 2632 Hz.
+* The input signal should be single-channel. Multi-channel input works from
+  a file, but the output will be mono.
+* Note that since scrambling and descrambling are the same operation this
+  tool also works as a scrambler!
 
 ### Simple inversion, WAV input
 
 (De)scrambling a WAV file with setting 4:
 
-    ./build/deinvert -i input.wav -o output.wav -p 4
+```bash
+deinvert -i input.wav -o output.wav -p 4
+```
 
 ### Split-band inversion
 
 (De)scrambling split-band inversion with a bandwidth of 3500 Hz, split at 1200 Hz:
 
-    ./build/deinvert -i input.wav -o output.wav -f 3500 -s 1200
+```bash
+deinvert -i input.wav -o output.wav -f 3500 -s 1200
+```
 
 ### Invert a live signal from RTL-SDR
 
-Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
+Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4. Here
+we also use `rtl_fm` from the RTL-SDR distribution and the `play` command from `sox`
+as examples.
 
-    rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 | ./build/deinvert -r 12000 -p 4 |\
-      play -r 12k -c 1 -t .s16 -
+```bash
+rtl_fm -M fm -f 27.0M -s 12k -g 50 -l 70 |\
+  deinvert -r 12000 -p 4 |\
+  play -r 12k -c 1 -t .s16 -
+```
 
 ### Invert a live signal from Gqrx (requires netcat)
+
+You can listen to descrambled audio while receiving a radio channel in Gqrx
+at the same time:
 
 1. Set Gqrx to demodulate the audio (for example, narrow FM).
 2. Go to the Audio window and click on the three dots button "...".
 3. Go to Network and set host to localhost and port to e.g. 12345.
 4. In the Audio window, enable UDP.
-5. Run this command in a terminal window:
+5. Run this command in a terminal window: (replace `play` with the audio
+   player of your choice):
 
-    nc -u -l localhost 12345 | ./build/deinvert -r 48000 | play -r 48k -c 1 -t .s16 -
+```bash
+nc -u -l localhost 12345 | deinvert -r 48000 | play -r 48k -c 1 -t .s16 -
+```
 
 
 ### Full options
 
-    ./build/deinvert [OPTIONS]
+    deinvert [OPTIONS]
 
     -f, --frequency FREQ   Frequency of the inversion carrier, in Hertz.
 
@@ -108,6 +137,9 @@ Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 
 ## Inversion carrier presets
 
+We provide preset frequencies used by Selectone ST-20B as a convenience
+(use the `-p` option):
+
 | No | Frequency |
 | -- | --------- |
 |  1 | 2632 Hz   |
@@ -118,6 +150,8 @@ Descrambling a live FM channel at 27 Megahertz from an RTL-SDR, setting 4:
 |  6 | 3339 Hz   |
 |  7 | 3495 Hz   |
 |  8 | 3729 Hz   |
+
+You can also provide any other frequency using the `-f` option.
 
 ## Troubleshooting
 
@@ -135,7 +169,9 @@ frequency should be around 250 Hz less than the inversion carrier frequency. For
 example, if the inversion carrier is 3023 Hz, the `play` command could be
 changed to:
 
-    play -r 12000 -c 1 -t .s16 - sinc -2800
+```bash
+play -r 12000 -c 1 -t .s16 - sinc -2800
+```
 
 ## Licensing
 
