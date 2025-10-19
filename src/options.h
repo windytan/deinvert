@@ -157,14 +157,13 @@ inline Options GetOptions(int argc, char **argv) {
 
   if (options.input_type == InputType::sndfile && samplerate_set)
     throw std::runtime_error(
-        "don't specify sample rate (-r) with -i; I want to read it from the sound file");
+        "conflicting options; don't specify a sample rate when using an input audio file");
 
   if (options.is_split_band && options.frequency_lo >= options.frequency_hi)
-    throw std::runtime_error("split point must be below the inversion carrier");
+    throw std::runtime_error("split point frequency must be below the inversion carrier");
 
   if (options.samplerate < options.frequency_hi * 2.0f)
-    throw std::runtime_error(
-        "sample rate must be at least twice the inversion frequency (see Nyquist-Shannon theorem)");
+    throw std::runtime_error("sample rate must be at least twice the inversion frequency");
 
   return options;
 }

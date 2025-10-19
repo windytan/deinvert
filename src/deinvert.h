@@ -17,13 +17,8 @@
  */
 #pragma once
 
-#include <array>
-#include <cstdint>
-#include <string>
 #include <vector>
 
-#include "config.h"
-#include "src/io.h"
 #include "src/liquid_wrappers.h"
 
 namespace deinvert {

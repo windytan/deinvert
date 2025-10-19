@@ -23,7 +23,6 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
-#include <string>
 #include <vector>
 
 #include "src/io.h"
