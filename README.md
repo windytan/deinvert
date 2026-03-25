@@ -6,7 +6,7 @@ inversion as well as split-band inversion.
 NOTE: Frequency inversion is NOT encryption! It's very easy to decode. This
 program is a toy and should never be used for security purposes.
 
-See the [wiki](https://github.com/windytan/deinvert/wiki) for detailed usage
+See the [wiki](https://codeberg.org/windytan/deinvert/wiki) for detailed usage
 instructions and examples.
 
 ## Prerequisites
@@ -159,7 +159,7 @@ You can also provide any other frequency using the `-f` option.
 
 In this case, the sample is probably not frequency inversion scrambled.
 It's very rare to encounter frequency inversion scrambling nowadays. See the
-[wiki](https://github.com/windytan/deinvert/wiki) for details.
+[wiki](https://codeberg.org/windytan/deinvert/wiki) for details.
 
 ### I hear a high-pitched beep in the result
 
